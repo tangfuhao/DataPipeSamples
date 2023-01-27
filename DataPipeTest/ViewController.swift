@@ -24,7 +24,7 @@ class ViewController: UIViewController {
         
         let dataPipe = CSDataPipe.createDataPipe(tepology: topology)
         self.dataPipe = dataPipe
-        dataPipe.receiverCVPixelBuffer() { data in
+        dataPipe.receiverCVPixelBuffer { pixelBuffer in
             
         }
         

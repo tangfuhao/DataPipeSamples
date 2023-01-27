@@ -20,7 +20,7 @@ typedef struct
 } CSDataWrapNative;
 
 //define data callback function
-typedef void (*PullCallBackPtr)(CSDataWrapNative*);
+typedef void (*PullCallBackPtr)(const char* id, CSDataWrapNative*);
 
 typedef void (*PUInitCallBackPtr)(void);
 typedef void (*PUProcessCallBackPtr)(void);

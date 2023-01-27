@@ -13,7 +13,7 @@
 void cs_data_pipe_pull_data_implement(CSDataPipeNative *dataPipe, PullCallBackPtr pullCallBack) {
     CSProcessUnitNative* outputNode = dataPipe->_outPutNode;
     CSDataWrapNative* dataWrap = cs_process_unit_process(dataPipe, outputNode);
-    pullCallBack(dataWrap);
+    pullCallBack("1",dataWrap);
 }
 
 PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipeNative *dataPipe) {
