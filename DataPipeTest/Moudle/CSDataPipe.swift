@@ -34,15 +34,15 @@ class CSDataPipe {
         return CSDataPipe()
     }
     
-    let nativePtr: UnsafeMutablePointer<CSDataPipe>
+//    let nativePtr: UnsafeMutablePointer<CSDataPipe>
     
     init() {
-        nativePtr = cs_data_pipe_create()
+//        nativePtr = cs_data_pipe_create()
     }
     
     deinit {
         print("CSDataPipe release")
-        cs_data_pipe_release()
+//        cs_data_pipe_release()
     }
     
     
