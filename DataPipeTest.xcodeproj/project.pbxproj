@@ -7,15 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7B65CE3029821B5B0048A751 /* CSDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE2F29821B5B0048A751 /* CSDataSource.swift */; };
+		7B65CE3229821B720048A751 /* CSDataProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE3129821B720048A751 /* CSDataProcessor.swift */; };
+		7B65CE34298224540048A751 /* CSDataPipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE33298224540048A751 /* CSDataPipe.swift */; };
+		7B65CE3929827A4E0048A751 /* CameraSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE3829827A4E0048A751 /* CameraSource.swift */; };
 		7BCF499129794698002BA8EF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF499029794698002BA8EF /* AppDelegate.swift */; };
 		7BCF499329794698002BA8EF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF499229794698002BA8EF /* SceneDelegate.swift */; };
 		7BCF499529794698002BA8EF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF499429794698002BA8EF /* ViewController.swift */; };
 		7BCF499829794698002BA8EF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7BCF499629794698002BA8EF /* Main.storyboard */; };
 		7BCF499A29794699002BA8EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7BCF499929794699002BA8EF /* Assets.xcassets */; };
 		7BCF499D29794699002BA8EF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7BCF499B29794699002BA8EF /* LaunchScreen.storyboard */; };
+		7BCF49A8297946BB002BA8EF /* DataPipe.c in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF49A7297946BB002BA8EF /* DataPipe.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7B65CE2F29821B5B0048A751 /* CSDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSDataSource.swift; sourceTree = "<group>"; };
+		7B65CE3129821B720048A751 /* CSDataProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSDataProcessor.swift; sourceTree = "<group>"; };
+		7B65CE33298224540048A751 /* CSDataPipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSDataPipe.swift; sourceTree = "<group>"; };
+		7B65CE3829827A4E0048A751 /* CameraSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSource.swift; sourceTree = "<group>"; };
 		7BCF498D29794698002BA8EF /* DataPipeTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DataPipeTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BCF499029794698002BA8EF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7BCF499229794698002BA8EF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -24,6 +33,9 @@
 		7BCF499929794699002BA8EF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7BCF499C29794699002BA8EF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7BCF499E29794699002BA8EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7BCF49A5297946BA002BA8EF /* DataPipeTest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DataPipeTest-Bridging-Header.h"; sourceTree = "<group>"; };
+		7BCF49A6297946BB002BA8EF /* DataPipe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataPipe.h; sourceTree = "<group>"; };
+		7BCF49A7297946BB002BA8EF /* DataPipe.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DataPipe.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +49,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7B65CE3729827A1F0048A751 /* Moudle */ = {
+			isa = PBXGroup;
+			children = (
+				7B65CE2F29821B5B0048A751 /* CSDataSource.swift */,
+				7B65CE3129821B720048A751 /* CSDataProcessor.swift */,
+				7B65CE33298224540048A751 /* CSDataPipe.swift */,
+			);
+			path = Moudle;
+			sourceTree = "<group>";
+		};
 		7BCF498429794698002BA8EF = {
 			isa = PBXGroup;
 			children = (
@@ -56,6 +78,8 @@
 		7BCF498F29794698002BA8EF /* DataPipeTest */ = {
 			isa = PBXGroup;
 			children = (
+				7B65CE3729827A1F0048A751 /* Moudle */,
+				7BCF49A4297946A0002BA8EF /* Native */,
 				7BCF499029794698002BA8EF /* AppDelegate.swift */,
 				7BCF499229794698002BA8EF /* SceneDelegate.swift */,
 				7BCF499429794698002BA8EF /* ViewController.swift */,
@@ -63,8 +87,19 @@
 				7BCF499929794699002BA8EF /* Assets.xcassets */,
 				7BCF499B29794699002BA8EF /* LaunchScreen.storyboard */,
 				7BCF499E29794699002BA8EF /* Info.plist */,
+				7B65CE3829827A4E0048A751 /* CameraSource.swift */,
 			);
 			path = DataPipeTest;
+			sourceTree = "<group>";
+		};
+		7BCF49A4297946A0002BA8EF /* Native */ = {
+			isa = PBXGroup;
+			children = (
+				7BCF49A6297946BB002BA8EF /* DataPipe.h */,
+				7BCF49A7297946BB002BA8EF /* DataPipe.c */,
+				7BCF49A5297946BA002BA8EF /* DataPipeTest-Bridging-Header.h */,
+			);
+			path = Native;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -99,6 +134,7 @@
 				TargetAttributes = {
 					7BCF498C29794698002BA8EF = {
 						CreatedOnToolsVersion = 14.2;
+						LastSwiftMigration = 1420;
 					};
 				};
 			};
@@ -138,9 +174,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B65CE3229821B720048A751 /* CSDataProcessor.swift in Sources */,
 				7BCF499529794698002BA8EF /* ViewController.swift in Sources */,
 				7BCF499129794698002BA8EF /* AppDelegate.swift in Sources */,
 				7BCF499329794698002BA8EF /* SceneDelegate.swift in Sources */,
+				7B65CE34298224540048A751 /* CSDataPipe.swift in Sources */,
+				7B65CE3029821B5B0048A751 /* CSDataSource.swift in Sources */,
+				7BCF49A8297946BB002BA8EF /* DataPipe.c in Sources */,
+				7B65CE3929827A4E0048A751 /* CameraSource.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +326,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JPZNX349UH;
@@ -303,6 +345,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.hao.fu.DataPipeTest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "DataPipeTest/Native/DataPipeTest-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -313,6 +357,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JPZNX349UH;
@@ -331,6 +376,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.hao.fu.DataPipeTest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "DataPipeTest/Native/DataPipeTest-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
