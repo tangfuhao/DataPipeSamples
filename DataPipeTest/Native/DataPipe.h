@@ -17,10 +17,10 @@ typedef struct
     void* data;
     int dataSize;
     
-} CSDataWrap;
+} CSDataWrapNative;
 
 //define data callback function
-typedef void (*PullCallBackPtr)(CSDataWrap*);
+typedef void (*PullCallBackPtr)(CSDataWrapNative*);
 
 typedef void (*PUInitCallBackPtr)(void);
 typedef void (*PUProcessCallBackPtr)(void);
@@ -34,7 +34,7 @@ typedef struct
     int a;
     char b;
     double c;
-} CSDataSource;
+} CSDataSourceNative;
 
 
 
@@ -52,11 +52,11 @@ typedef struct
     int                 _dependentSourceCount;
     
     PUProcessCallBackPtr _onProcessFunc;
-    CSDataWrap*         _outputData;
+    CSDataWrapNative*         _outputData;
     
     void*              _dependentUnitPtr[CONNECT_NODE_MAX];
     void*              _dependentSourcePtr[CONNECT_NODE_MAX];
-} CSProcessUnit;
+} CSProcessUnitNative;
 
 typedef struct
 {
@@ -80,9 +80,9 @@ typedef struct
     pthread_cond_t  _params_sync_cond;
     
     
-    CSProcessUnit*  _outPutNode;
+    CSProcessUnitNative*  _outPutNode;
     
-} CSDataPipe;
+} CSDataPipeNative;
 
 
 
@@ -90,26 +90,26 @@ typedef struct
 
 
 
-CSDataPipe* cs_data_pipe_create(void);
-void cs_data_pipe_release(CSDataPipe* dataPipe);
+CSDataPipeNative* cs_data_pipe_create(void);
+void cs_data_pipe_release(CSDataPipeNative* dataPipe);
 
 
 
-void cs_data_pipe_resume(CSDataPipe* dataPipe);
-void cs_data_pipe_pause(CSDataPipe* dataPipe);
+void cs_data_pipe_resume(CSDataPipeNative* dataPipe);
+void cs_data_pipe_pause(CSDataPipeNative* dataPipe);
 
 // pull data from data pipe
-void cs_data_pipe_pull_data(CSDataPipe* dataPipe,PullCallBackPtr callback);
+void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
 
 
 
-CSDataSource* cs_data_source_create(void);
-void cs_data_source_release(CSDataSource *source);
+CSDataSourceNative* cs_data_source_create(void);
+void cs_data_source_release(CSDataSourceNative *source);
 
 
-CSDataWrap* cs_process_unit_process(CSDataPipe *dataPipe,CSProcessUnit* unit);
+CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
 
-CSDataWrap* cs_process_source_process(CSDataPipe *dataPipe,CSDataSource *dataSource);
+CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
 
 
 #endif /* DataPipe_h */

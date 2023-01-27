@@ -10,13 +10,13 @@
 
 
 //implement for pull data
-void cs_data_pipe_pull_data_implement(CSDataPipe *dataPipe, PullCallBackPtr pullCallBack) {
-    CSProcessUnit* outputNode = dataPipe->_outPutNode;
-    CSDataWrap* dataWrap = cs_process_unit_process(dataPipe, outputNode);
+void cs_data_pipe_pull_data_implement(CSDataPipeNative *dataPipe, PullCallBackPtr pullCallBack) {
+    CSProcessUnitNative* outputNode = dataPipe->_outPutNode;
+    CSDataWrapNative* dataWrap = cs_process_unit_process(dataPipe, outputNode);
     pullCallBack(dataWrap);
 }
 
-PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipe *dataPipe) {
+PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipeNative *dataPipe) {
     PullCallBackPtr callBack = dataPipe->_callback;
     
     while (callBack == NULL) {
@@ -29,7 +29,7 @@ PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipe *dataPipe) {
     return callBack;
 }
 
-int cs_data_pipe_wait_type(CSDataPipe *dataPipe) {
+int cs_data_pipe_wait_type(CSDataPipeNative *dataPipe) {
     //wait type determines
     while (dataPipe->_type == 0) {
         pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
@@ -40,7 +40,7 @@ int cs_data_pipe_wait_type(CSDataPipe *dataPipe) {
     
 }
 
-void cs_data_pipe_process_pull(CSDataPipe *dataPipe) {
+void cs_data_pipe_process_pull(CSDataPipeNative *dataPipe) {
     //whether is over for each round
     while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
 
@@ -54,14 +54,14 @@ void cs_data_pipe_process_pull(CSDataPipe *dataPipe) {
     }
 }
 
-void cs_data_pipe_process_push(CSDataPipe *datapipe) {
+void cs_data_pipe_process_push(CSDataPipeNative *datapipe) {
     
 }
 
 
 static void* cs_data_pipe_thread_proc(void *param)
 {
-    CSDataPipe   *dataPipe = (CSDataPipe*)param;
+    CSDataPipeNative   *dataPipe = (CSDataPipeNative*)param;
 
     while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
         //whether determines type
@@ -82,10 +82,10 @@ static void* cs_data_pipe_thread_proc(void *param)
 
 
 
-CSDataPipe* cs_data_pipe_create(void) {
-    CSDataPipe *dataPipe = NULL;
+CSDataPipeNative* cs_data_pipe_create(void) {
+    CSDataPipeNative *dataPipe = NULL;
     // alloc dataPipe context
-    dataPipe = (CSDataPipe*)calloc(1, sizeof(CSDataPipe));
+    dataPipe = (CSDataPipeNative*)calloc(1, sizeof(CSDataPipeNative));
     if (!dataPipe) return NULL;
     
     //init
@@ -98,25 +98,25 @@ CSDataPipe* cs_data_pipe_create(void) {
     return dataPipe;
 }
 
-void cs_data_pipe_release(CSDataPipe* dataPipe) {
+void cs_data_pipe_release(CSDataPipeNative* dataPipe) {
     free(dataPipe);
 }
 
-void cs_data_pipe_resume(CSDataPipe* dataPipe) {
+void cs_data_pipe_resume(CSDataPipeNative* dataPipe) {
     
 }
 
-void cs_data_pipe_pause(CSDataPipe* dataPipe) {
+void cs_data_pipe_pause(CSDataPipeNative* dataPipe) {
     
 }
 
-void cs_data_pipe_pull_data(CSDataPipe* dataPipe,PullCallBackPtr callback) {
+void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback) {
     
 }
 
 
 
-CSDataWrap* cs_process_unit_on_process(CSDataPipe *dataPipe, CSProcessUnit* unit) {
+CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     if(unit->_onProcessFunc != NULL){
         unit->_onProcessFunc();
     }
@@ -124,26 +124,26 @@ CSDataWrap* cs_process_unit_on_process(CSDataPipe *dataPipe, CSProcessUnit* unit
 }
 
 
-void cs_process_unit_process_dependent(CSDataPipe *dataPipe, CSProcessUnit* unit) {
+void cs_process_unit_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     for (int i = 0; i < unit->_dependentUnitCount; i++) {
-        CSProcessUnit* childUnit = unit->_dependentUnitPtr[i];
+        CSProcessUnitNative* childUnit = unit->_dependentUnitPtr[i];
         cs_process_unit_process(dataPipe, childUnit);
     }
     
     for (int i = 0; i < unit->_dependentSourceCount; i++) {
-        CSDataSource* childSource = unit->_dependentSourcePtr[i];
+        CSDataSourceNative* childSource = unit->_dependentSourcePtr[i];
         cs_process_source_process(dataPipe, childSource);
     }
 }
 
-void cs_process_unit_on_init(CSDataPipe *dataPipe, CSProcessUnit* unit) {
+void cs_process_unit_on_init(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     if (unit->_onIntFunc != NULL) {
         unit->_onIntFunc();
         unit->_status = unit->_status | CS_PU_STATUS_INIT;
     }
 }
 
-CSDataWrap* cs_process_unit_process(CSDataPipe *dataPipe, CSProcessUnit* unit) {
+CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     
     //on init
     if (!(unit->_status & CS_PU_STATUS_INIT)){
@@ -155,6 +155,6 @@ CSDataWrap* cs_process_unit_process(CSDataPipe *dataPipe, CSProcessUnit* unit) {
     return cs_process_unit_on_process(dataPipe, unit);
 }
 
-CSDataWrap* cs_process_source_process(CSDataPipe *dataPipe,CSDataSource *dataSource) {
+CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource) {
     return NULL;
 }
