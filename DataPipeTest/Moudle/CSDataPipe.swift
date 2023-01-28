@@ -14,6 +14,9 @@ public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
 class CSDataPipeTopology {
     var mainSource: CSDataSource?
+
+    
+    
     
     func setMainSource(_ source: CSDataSource) {
         mainSource = source
@@ -32,6 +35,10 @@ class CSDataPipe {
     }
     
     public static func createDataPipe(tepology: CSDataPipeTopology) -> CSDataPipe {
+        
+        
+        
+        
         return CSDataPipe()
     }
     

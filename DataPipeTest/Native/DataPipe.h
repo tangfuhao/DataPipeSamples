@@ -105,6 +105,7 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
 
 CSDataSourceNative* cs_data_source_create(void);
 void cs_data_source_release(CSDataSourceNative *source);
+CSDataWrapNative* cs_data_source_get_data_cache(CSDataSourceNative *source);
 
 
 CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);

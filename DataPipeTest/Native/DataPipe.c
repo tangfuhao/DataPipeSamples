@@ -114,6 +114,8 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
     
 }
 
+//////////////////////////////////////////////////////////////////
+
 
 
 CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
@@ -157,4 +159,23 @@ CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe, CSProcessU
 
 CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource) {
     return NULL;
+}
+
+
+////////////////////////////////////////////////////////////////
+
+
+CSDataSourceNative* cs_data_source_create(void) {
+    CSDataSourceNative *source = NULL;
+    source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
+    if (!source) return NULL;
+    return source;
+}
+
+void cs_data_source_release(CSDataSourceNative *source) {
+    free(source);
+}
+
+CSDataWrapNative* cs_data_source_get_data_cache(CSDataSourceNative *source) {
+    return  NULL;
 }
