@@ -23,7 +23,8 @@ class CSDataSource {
     func setPixelData(pixelBuffer: CVPixelBuffer) {
         // Copy the data from the pixel buffer to the destination pointer
         CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_source_get_data_cache(nativePtr)
+        
+        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_source_lock_data_cache(nativePtr)
         
         
         let width = CVPixelBufferGetWidth(pixelBuffer)
@@ -40,8 +41,7 @@ class CSDataSource {
             memcpy(dest, src, width * 4)
         }
         
-        
-        
+        cs_data_source_unlock_data_cache(nativePtr, dataCachePointer)
         CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
     }
     

@@ -176,6 +176,10 @@ void cs_data_source_release(CSDataSourceNative *source) {
     free(source);
 }
 
-CSDataWrapNative* cs_data_source_get_data_cache(CSDataSourceNative *source) {
-    return  NULL;
+CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source) {
+    return NULL;
+}
+
+void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap) {
+    
 }

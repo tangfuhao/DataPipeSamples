@@ -88,12 +88,14 @@ typedef struct
 
 
 
+/**
+ ==============================================================
+ Data Pipe
+ */
 
 
 CSDataPipeNative* cs_data_pipe_create(void);
 void cs_data_pipe_release(CSDataPipeNative* dataPipe);
-
-
 
 void cs_data_pipe_resume(CSDataPipeNative* dataPipe);
 void cs_data_pipe_pause(CSDataPipeNative* dataPipe);
@@ -102,15 +104,52 @@ void cs_data_pipe_pause(CSDataPipeNative* dataPipe);
 void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
 
 
+/**
+ ==============================================================
+ */
+
+
+
+
+
+
+/**
+ ==============================================================
+ Data Source
+ */
+
+
 
 CSDataSourceNative* cs_data_source_create(void);
 void cs_data_source_release(CSDataSourceNative *source);
-CSDataWrapNative* cs_data_source_get_data_cache(CSDataSourceNative *source);
+
+CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source);
+void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap);
+
+
+/**
+ ==============================================================
+ */
+
+
+
+
+
+
+
+
+/**
+ ==============================================================
+ Data Processor
+ */
 
 
 CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
-
 CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
+
+/**
+ ==============================================================
+ */
 
 
 #endif /* DataPipe_h */
