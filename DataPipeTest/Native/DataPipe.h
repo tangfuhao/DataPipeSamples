@@ -31,9 +31,13 @@ typedef void (*PUProcessCallBackPtr)(void);
 //input data source
 typedef struct
 {
-    int a;
-    char b;
-    double c;
+
+    int                 _readIndex;
+    int                 _writeIndex;
+    
+    #define             CACHE_BUFFER_MAX_SIZE        2
+    void*               _cacheBuffer[CACHE_BUFFER_MAX_SIZE];
+    
 } CSDataSourceNative;
 
 
@@ -143,6 +147,9 @@ void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNati
  Data Processor
  */
 
+
+CSProcessUnitNative* cs_data_processor_create(void);
+void cs_data_processor_release(CSProcessUnitNative* processor);
 
 CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
 CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);

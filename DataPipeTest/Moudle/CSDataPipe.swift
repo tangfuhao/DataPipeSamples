@@ -14,15 +14,11 @@ public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
 class CSDataPipeTopology {
     var mainSource: CSDataSource?
-
-    
-    
-    
     func setMainSource(_ source: CSDataSource) {
         mainSource = source
     }
     
-    func setInOutPipe(in: CSDataSource, out: CSDataSource) {
+    func setInOutPipe(in: any CSUnitProtocol, out: any CSUnitProtocol) {
         
     }
 }

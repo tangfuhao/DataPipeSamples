@@ -6,20 +6,34 @@
 //
 
 import Foundation
+import CoreVideo
 
-class CSDataProcessor : CSDataSource {
+
+protocol ProcessorProtocol {
     
+}
+
+
+class CSDataProcessorBase : CSUnitProtocol {
+    typealias Model = CSProcessUnitNative
+    let nativePtr = cs_data_processor_create()
     
-    override func onInit() {
+    func onInit() {
         
     }
-    func onProcess(datas: [Data]?) -> Data {
-        return Data()
-    }
     
-    func onRelsese() {
+    func onRelease() {
         
     }
     
-    
+    func getNativePtr() -> UnsafeMutablePointer<CSProcessUnitNative> {
+        return nativePtr!
+    }
+}
+
+
+typealias CSDataProcessorProtocol = ProcessorProtocol & CSDataProcessorBase
+
+class CSDataProcessor : CSDataProcessorProtocol {
+
 }

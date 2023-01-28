@@ -115,9 +115,10 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
 }
 
 //////////////////////////////////////////////////////////////////
+///Data Processor
 
 
-
+//Internal
 CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     if(unit->_onProcessFunc != NULL){
         unit->_onProcessFunc();
@@ -143,6 +144,21 @@ void cs_process_unit_on_init(CSDataPipeNative *dataPipe, CSProcessUnitNative* un
         unit->_onIntFunc();
         unit->_status = unit->_status | CS_PU_STATUS_INIT;
     }
+}
+
+
+//Public
+CSProcessUnitNative* cs_data_processor_create(void) {
+    CSProcessUnitNative *processor = NULL;
+    // alloc processor context
+    processor = (CSProcessUnitNative*)calloc(1, sizeof(CSProcessUnitNative));
+    if (!processor) return NULL;
+    return processor;
+}
+
+
+void cs_data_processor_release(CSProcessUnitNative* processor) {
+    free(processor);
 }
 
 CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
@@ -177,9 +193,14 @@ void cs_data_source_release(CSDataSourceNative *source) {
 }
 
 CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source) {
-    return NULL;
+    //
+    if(source->_readIndex == source->_writeIndex) {
+        return source->_cacheBuffer[source->_writeIndex + 1];
+    }
+    
+    return source->_cacheBuffer[source->_writeIndex];
 }
 
 void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap) {
-    
+    source->_writeIndex = (source->_writeIndex + 1) % 2;
 }

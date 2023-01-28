@@ -15,7 +15,11 @@ class CameraSource : CSDataSource {
     
     override func onInit() {
         super.onInit()
+        
+        setInputDataParams(params: ["1":"2","3":"4"])
+        
         cameraCapture = CameraCapture(delegate: self)
+        cameraCapture?.startCapture(ofCamera: .front)
     }
 }
 
