@@ -17,21 +17,23 @@ class ViewController: UIViewController {
         
         
         //create data pipe topology
-        let topology = CSDataPipe.createTopology()
+
         
-        let dataSource = CameraSource()
-        let dataProcesser = YUV2RGBProcessor()
-        topology.setMainInputAndOutput(input: dataSource, output: dataProcesser)
-        topology.connectPipe(input: dataSource, output: dataProcesser)
+
+
         
         
         //create data pipe
-        let dataPipe = CSDataPipe.createDataPipe(tepology: topology)
+        let dataPipe = CSDataPipe()
         self.dataPipe = dataPipe
+        
+        let dataSource = CameraSource()
+        let dataProcesser = YUV2RGBProcessor()
+        dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
+        dataPipe.connectPipe(input: dataSource, output: dataProcesser)
         
         dataPipe.receiverCVPixelBuffer { pixelBuffer in
             print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
-            
         }
         
         

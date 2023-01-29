@@ -12,33 +12,11 @@ import AVFoundation
 
 public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
-class CSDataPipeTopology {
-    var mainSource: CSDataSource?
-    var mainOutput: CSDataProcessor?
-    
-    func setMainInputAndOutput(input: CSDataSource, output: CSDataProcessor) {
-        mainSource = input
-        mainOutput = output
-    }
-    
-    func connectPipe(input: CSDataSource, output: CSDataProcessor) {
-        
-    }
-    
-    func connectPipe(input: CSDataProcessor, output: CSDataProcessor) {
-        
-    }
-}
 
 
 
 class CSDataPipe {
-    public static func createTopology() -> CSDataPipeTopology{
-        return CSDataPipeTopology()
-    }
-    
-    public static func createDataPipe(tepology: CSDataPipeTopology) -> CSDataPipe {
-
+    public static func createDataPipe() -> CSDataPipe {
         return CSDataPipe()
     }
     
@@ -59,6 +37,25 @@ class CSDataPipe {
         print("CSDataPipe release")
         cs_data_pipe_release(nativePtr)
     }
+    
+    
+    
+    var mainSource: CSDataSource?
+    var mainOutput: CSDataProcessor?
+    
+    func setMainInputAndOutput(input: CSDataSource, output: CSDataProcessor) {
+        mainSource = input
+        mainOutput = output
+    }
+    
+    func connectPipe(input: CSDataSource, output: CSDataProcessor) {
+        
+    }
+    
+    func connectPipe(input: CSDataProcessor, output: CSDataProcessor) {
+        
+    }
+    
     
     
     
