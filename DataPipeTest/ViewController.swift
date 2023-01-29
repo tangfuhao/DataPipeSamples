@@ -20,7 +20,7 @@ class ViewController: UIViewController {
         let topology = CSDataPipe.createTopology()
         
         let dataSource = CameraSource()
-        let dataProcesser = CSDataProcessor()
+        let dataProcesser = YUV2RGBProcessor()
         topology.setMainInputAndOutput(input: dataSource, output: dataProcesser)
         topology.connectPipe(input: dataSource, output: dataProcesser)
         
@@ -30,6 +30,7 @@ class ViewController: UIViewController {
         self.dataPipe = dataPipe
         
         dataPipe.receiverCVPixelBuffer { pixelBuffer in
+            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
             
         }
         

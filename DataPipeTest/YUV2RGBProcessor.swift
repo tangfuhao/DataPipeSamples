@@ -20,10 +20,10 @@ class YUV2RGBProcessor : CSDataProcessor {
     override func onProcess() {
         super.onProcess()
         
-//        guard let inputPixel = getInputPixel(index: 0) else {
-//            return
-//        }
-//        
+        guard let inputPixel = getInputPixel(index: 0) else {
+            return
+        }
+//
 //        let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: inputPixel)
         
         

@@ -40,13 +40,12 @@ class CSDataProcessor : CSUnitBase<CSProcessUnitNative>, CSProcessorProtocol {
         let height = 480
         let bytesPerRow = width * 4
         
-        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_processor_lock_data_cache(nativePtr)
+        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_processor_get_input_data(nativePtr,0)
         
         let pixelData = dataCachePointer.pointee.data!
         var pixelBuffer: CVPixelBuffer?
         CVPixelBufferCreateWithBytes(nil, width, height, kCVPixelFormatType_32BGRA, pixelData, bytesPerRow, nil, nil, nil, &pixelBuffer)
         
-        cs_data_processor_unlock_data_cache(nativePtr, dataCachePointer)
         return pixelBuffer
     }
     

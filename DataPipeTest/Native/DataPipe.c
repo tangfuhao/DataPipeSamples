@@ -129,13 +129,14 @@ CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProce
 
 void cs_process_unit_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     for (int i = 0; i < unit->_dependentUnitCount; i++) {
-        CSProcessUnitNative* childUnit = unit->_dependentUnitPtr[i];
-        cs_process_unit_process(dataPipe, childUnit);
-    }
-    
-    for (int i = 0; i < unit->_dependentSourceCount; i++) {
-        CSDataSourceNative* childSource = unit->_dependentSourcePtr[i];
-        cs_process_source_process(dataPipe, childSource);
+        CSDataHeaderNative* dataHeader = unit->_dependentInputPtr[i];
+        if(dataHeader->context_type == 0){
+            CSDataSourceNative* childSource = (CSDataSourceNative*)dataHeader;
+            cs_process_source_process(dataPipe, childSource);
+        }else{
+            CSProcessUnitNative* childUnit = (CSProcessUnitNative*)dataHeader;
+            cs_process_unit_process(dataPipe, childUnit);
+        }
     }
 }
 
@@ -178,16 +179,14 @@ CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSou
 }
 
 
-CSDataWrapNative* cs_data_processor_lock_data_cache(CSProcessUnitNative *source) {
-    
-    
-    
-    return NULL;
+
+//TODO Read index is actively add 1
+CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex) {
+    void* dependentInputItem = source->_dependentInputPtr[inputIndex];
+    CSDataCacheNative* dataCache = (CSDataCacheNative*)dependentInputItem;
+    return dataCache->_cacheBuffer[dataCache->_readIndex];
 }
 
-void cs_data_processor_unlock_data_cache(CSProcessUnitNative *source, CSDataWrapNative* dataWrap) {
-    
-}
 
 
 ////////////////////////////////////////////////////////////////
@@ -206,7 +205,7 @@ void cs_data_source_release(CSDataSourceNative *source) {
 }
 
 CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source) {
-    CSDataCacheNative cache = source->cache;
+    CSDataCacheNative cache = source->header.cache;
     
     
     if(cache._readIndex == cache._writeIndex) {
@@ -217,14 +216,14 @@ CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source) {
 }
 
 void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap) {
-    CSDataCacheNative cache = source->cache;
-    cache._writeIndex = (cache._writeIndex + 1) % 2;
+    CSDataCacheNative cache = source->header.cache;
+    cache._writeIndex = (cache._writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
 }
 
 
 
 void cs_data_source_create_data_cache(CSDataSourceNative *source, int dataSize) {
-    CSDataCacheNative cache = source->cache;
+    CSDataCacheNative cache = source->header.cache;
     cache._cacheBuffer[0] = malloc(dataSize);
     cache._cacheBuffer[1] = malloc(dataSize);
 }

@@ -40,10 +40,21 @@ typedef struct
 } CSDataCacheNative;
 
 
+//data header
+typedef struct
+{
+
+    CSDataCacheNative cache;
+    int context_type;
+    
+} CSDataHeaderNative;
+
+
+
 //input data source
 typedef struct
 {
-    CSDataCacheNative cache;
+    CSDataHeaderNative header;
     
 } CSDataSourceNative;
 
@@ -52,7 +63,7 @@ typedef struct
 //process unit
 typedef struct
 {
-    CSDataCacheNative cache;
+    CSDataHeaderNative header;
     
     #define CS_PU_STATUS_INIT    (1 << 0)  // process uint inited
     #define CONNECT_NODE_MAX        3
@@ -62,13 +73,13 @@ typedef struct
     PUInitCallBackPtr           _onIntFunc;
     
     int                 _dependentUnitCount;
-    int                 _dependentSourceCount;
+//    int                 _dependentSourceCount;
     
     PUProcessCallBackPtr _onProcessFunc;
     CSDataWrapNative*         _outputData;
     
-    void*              _dependentUnitPtr[CONNECT_NODE_MAX];
-    void*              _dependentSourcePtr[CONNECT_NODE_MAX];
+    void**              _dependentInputPtr;
+
 } CSProcessUnitNative;
 
 typedef struct
@@ -191,8 +202,8 @@ void cs_data_processor_release(CSProcessUnitNative* processor);
 CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
 CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
 
-CSDataWrapNative* cs_data_processor_lock_data_cache(CSProcessUnitNative *source);
-void cs_data_processor_unlock_data_cache(CSProcessUnitNative *source, CSDataWrapNative* dataWrap);
+CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex);
+
 
 /**
  ==============================================================
