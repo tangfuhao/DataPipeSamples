@@ -16,12 +16,16 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         
+        //create data pipe topology
         let topology = CSDataPipe.createTopology()
-        let dataSource = CSDataSource()
-        let dataProcesser = CSDataProcessor()
-        topology.setMainSource(dataSource)
-        topology.setInOutPipe(in: dataSource, out: dataProcesser)
         
+        let dataSource = CameraSource()
+        let dataProcesser = CSDataProcessor()
+        topology.setMainInputAndOutput(input: dataSource, output: dataProcesser)
+        topology.connectPipe(input: dataSource, output: dataProcesser)
+        
+        
+        //create data pipe
         let dataPipe = CSDataPipe.createDataPipe(tepology: topology)
         self.dataPipe = dataPipe
         

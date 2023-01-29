@@ -27,8 +27,7 @@ typedef void (*PUProcessCallBackPtr)(void);
 
 
 
-
-//input data source
+//data cache
 typedef struct
 {
 
@@ -38,6 +37,14 @@ typedef struct
     #define             CACHE_BUFFER_MAX_SIZE        2
     void*               _cacheBuffer[CACHE_BUFFER_MAX_SIZE];
     
+} CSDataCacheNative;
+
+
+//input data source
+typedef struct
+{
+    CSDataCacheNative cache;
+    
 } CSDataSourceNative;
 
 
@@ -45,6 +52,8 @@ typedef struct
 //process unit
 typedef struct
 {
+    CSDataCacheNative cache;
+    
     #define CS_PU_STATUS_INIT    (1 << 0)  // process uint inited
     #define CONNECT_NODE_MAX        3
     int             _status;
@@ -123,10 +132,38 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
  */
 
 
+//enum VIDEOPARAM
+//{
+//    VIDEO_HEIGHT=1,
+//    VIDEO_WIDTH,
+//    COLOR_SPACES
+//} ;
+//
+//enum
+//{
+//    RGBA = 1,
+//    BGRA,
+//    NV21
+//
+//}ColorSpaces;
+//
+//
+//typedef struct
+//{
+//    enum VIDEOPARAM param;
+//    int value;
+//
+//} CSVideoParam;
+
+
+
+
 
 CSDataSourceNative* cs_data_source_create(void);
 void cs_data_source_release(CSDataSourceNative *source);
 
+
+void cs_data_source_create_data_cache(CSDataSourceNative *source, int dataSize);
 CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source);
 void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap);
 
@@ -153,6 +190,9 @@ void cs_data_processor_release(CSProcessUnitNative* processor);
 
 CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
 CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
+
+CSDataWrapNative* cs_data_processor_lock_data_cache(CSProcessUnitNative *source);
+void cs_data_processor_unlock_data_cache(CSProcessUnitNative *source, CSDataWrapNative* dataWrap);
 
 /**
  ==============================================================

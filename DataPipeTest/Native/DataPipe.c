@@ -178,7 +178,20 @@ CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSou
 }
 
 
+CSDataWrapNative* cs_data_processor_lock_data_cache(CSProcessUnitNative *source) {
+    
+    
+    
+    return NULL;
+}
+
+void cs_data_processor_unlock_data_cache(CSProcessUnitNative *source, CSDataWrapNative* dataWrap) {
+    
+}
+
+
 ////////////////////////////////////////////////////////////////
+///data source
 
 
 CSDataSourceNative* cs_data_source_create(void) {
@@ -193,14 +206,25 @@ void cs_data_source_release(CSDataSourceNative *source) {
 }
 
 CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source) {
-    //
-    if(source->_readIndex == source->_writeIndex) {
-        return source->_cacheBuffer[source->_writeIndex + 1];
+    CSDataCacheNative cache = source->cache;
+    
+    
+    if(cache._readIndex == cache._writeIndex) {
+        return cache._cacheBuffer[cache._writeIndex + 1];
     }
     
-    return source->_cacheBuffer[source->_writeIndex];
+    return cache._cacheBuffer[cache._writeIndex];
 }
 
 void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap) {
-    source->_writeIndex = (source->_writeIndex + 1) % 2;
+    CSDataCacheNative cache = source->cache;
+    cache._writeIndex = (cache._writeIndex + 1) % 2;
+}
+
+
+
+void cs_data_source_create_data_cache(CSDataSourceNative *source, int dataSize) {
+    CSDataCacheNative cache = source->cache;
+    cache._cacheBuffer[0] = malloc(dataSize);
+    cache._cacheBuffer[1] = malloc(dataSize);
 }

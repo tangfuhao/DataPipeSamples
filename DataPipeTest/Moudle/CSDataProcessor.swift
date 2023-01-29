@@ -9,31 +9,48 @@ import Foundation
 import CoreVideo
 
 
-protocol ProcessorProtocol {
+protocol CSProcessorProtocol {
+    func onProcess()
     
+    func getInputPixel(index: Int) -> CVPixelBuffer?
+    
+    func setOutputPixel(buffer: CVPixelBuffer)
 }
 
 
-class CSDataProcessorBase : CSUnitProtocol {
-    typealias Model = CSProcessUnitNative
-    let nativePtr = cs_data_processor_create()
+
+class CSDataProcessor : CSUnitBase<CSProcessUnitNative>, CSProcessorProtocol {
     
-    func onInit() {
+//    func getPixelCache(index: Int) -> CVPixelBuffer {
+//        
+//    }
+    
+    override func onInit() {
+        nativePtr = cs_data_processor_create()
+    }
+    
+    func onProcess() {}
+    
+    func setOutputPixel(buffer: CVPixelBuffer) {
         
     }
     
-    func onRelease() {
+    func getInputPixel(index: Int)  -> CVPixelBuffer? {
+        let width = 640
+        let height = 480
+        let bytesPerRow = width * 4
         
+        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_processor_lock_data_cache(nativePtr)
+        
+        let pixelData = dataCachePointer.pointee.data!
+        var pixelBuffer: CVPixelBuffer?
+        CVPixelBufferCreateWithBytes(nil, width, height, kCVPixelFormatType_32BGRA, pixelData, bytesPerRow, nil, nil, nil, &pixelBuffer)
+        
+        cs_data_processor_unlock_data_cache(nativePtr, dataCachePointer)
+        return pixelBuffer
     }
     
-    func getNativePtr() -> UnsafeMutablePointer<CSProcessUnitNative> {
-        return nativePtr!
-    }
-}
 
-
-typealias CSDataProcessorProtocol = ProcessorProtocol & CSDataProcessorBase
-
-class CSDataProcessor : CSDataProcessorProtocol {
-
+    
+    
 }

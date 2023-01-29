@@ -16,7 +16,7 @@ class CameraSource : CSDataSource {
     override func onInit() {
         super.onInit()
         
-        setInputDataParams(params: ["1":"2","3":"4"])
+        registerInputDataFormat(index: 0, type: .PixelBuffer)
         
         cameraCapture = CameraCapture(delegate: self)
         cameraCapture?.startCapture(ofCamera: .front)
@@ -25,6 +25,6 @@ class CameraSource : CSDataSource {
 
 extension CameraSource: CameraCapturePushDelegate {
     func myVideoCapture(_ capture: CameraCapture, didOutputSampleBuffer pixelBuffer: CVPixelBuffer, rotation: Int, timeStamp: CMTime) {
-        setPixelData(pixelBuffer: pixelBuffer)
+        pushPixelData(pixelBuffer: pixelBuffer)
     }
 }

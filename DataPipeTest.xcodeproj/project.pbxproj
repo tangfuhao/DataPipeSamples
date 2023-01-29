@@ -12,6 +12,8 @@
 		7B65CE34298224540048A751 /* CSDataPipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE33298224540048A751 /* CSDataPipe.swift */; };
 		7B65CE3929827A4E0048A751 /* CameraSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE3829827A4E0048A751 /* CameraSource.swift */; };
 		7B65CE3B2984CF7C0048A751 /* CameraCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE3A2984CF7C0048A751 /* CameraCapture.swift */; };
+		7B65CE3D29860CDE0048A751 /* CustomProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE3C29860CDE0048A751 /* CustomProcessor.swift */; };
+		7B65CE3F298622AA0048A751 /* YUV2RGBProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B65CE3E298622AA0048A751 /* YUV2RGBProcessor.swift */; };
 		7BCF499129794698002BA8EF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF499029794698002BA8EF /* AppDelegate.swift */; };
 		7BCF499329794698002BA8EF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF499229794698002BA8EF /* SceneDelegate.swift */; };
 		7BCF499529794698002BA8EF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF499429794698002BA8EF /* ViewController.swift */; };
@@ -27,6 +29,8 @@
 		7B65CE33298224540048A751 /* CSDataPipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSDataPipe.swift; sourceTree = "<group>"; };
 		7B65CE3829827A4E0048A751 /* CameraSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSource.swift; sourceTree = "<group>"; };
 		7B65CE3A2984CF7C0048A751 /* CameraCapture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
+		7B65CE3C29860CDE0048A751 /* CustomProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProcessor.swift; sourceTree = "<group>"; };
+		7B65CE3E298622AA0048A751 /* YUV2RGBProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YUV2RGBProcessor.swift; sourceTree = "<group>"; };
 		7BCF498D29794698002BA8EF /* DataPipeTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DataPipeTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BCF499029794698002BA8EF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7BCF499229794698002BA8EF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -91,6 +95,8 @@
 				7BCF499E29794699002BA8EF /* Info.plist */,
 				7B65CE3829827A4E0048A751 /* CameraSource.swift */,
 				7B65CE3A2984CF7C0048A751 /* CameraCapture.swift */,
+				7B65CE3C29860CDE0048A751 /* CustomProcessor.swift */,
+				7B65CE3E298622AA0048A751 /* YUV2RGBProcessor.swift */,
 			);
 			path = DataPipeTest;
 			sourceTree = "<group>";
@@ -177,11 +183,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B65CE3F298622AA0048A751 /* YUV2RGBProcessor.swift in Sources */,
 				7B65CE3229821B720048A751 /* CSDataProcessor.swift in Sources */,
 				7BCF499529794698002BA8EF /* ViewController.swift in Sources */,
 				7BCF499129794698002BA8EF /* AppDelegate.swift in Sources */,
 				7BCF499329794698002BA8EF /* SceneDelegate.swift in Sources */,
 				7B65CE3B2984CF7C0048A751 /* CameraCapture.swift in Sources */,
+				7B65CE3D29860CDE0048A751 /* CustomProcessor.swift in Sources */,
 				7B65CE34298224540048A751 /* CSDataPipe.swift in Sources */,
 				7B65CE3029821B5B0048A751 /* CSDataSource.swift in Sources */,
 				7BCF49A8297946BB002BA8EF /* DataPipe.c in Sources */,
