@@ -94,6 +94,7 @@ typedef struct
     #define CS_DP_STATUS_PAUSE    (1 << 0)  // datapipe pause
     #define CS_DP_STATUS_CLOSE      (1 << 1)  // datapipe close
     #define CS_DP_STATUS_RUNNING      (1 << 2)  // datapipe running
+    #define CS_DP_STATUS_VSYNC      (1 << 3)  // datapipe vsync
     int             _status;
     pthread_t       process_thread;
     

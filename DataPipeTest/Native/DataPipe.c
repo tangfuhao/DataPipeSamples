@@ -16,85 +16,71 @@
 
 
 ///Internal
-
-//Implement for push data
-void cs_data_pipe_push_data_implement(CSDataPipeNative *dataPipe, PullCallBackPtr pullCallBack) {
-    CSProcessUnitNative* outputNode = dataPipe->_outPutNode;
-    cs_processor_process(dataPipe, outputNode);
-    CSDataWrapNative* dataWrap = cs_data_cache_lock_data_cache(dataPipe);
-    pullCallBack("1",dataWrap);
-    cs_data_cache_unlock_data_cache(dataPipe);
-}
-
-PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipeNative *dataPipe) {
-    PullCallBackPtr callBack = dataPipe->_callback;
-    
-    while (callBack == NULL) {
-        pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
-        pthread_cond_wait(&(dataPipe->_status_sync_cond), &(dataPipe->_status_sync_mutex));
-        callBack = dataPipe->_callback;
-        dataPipe->_callback = NULL;
-        pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
-    }
-    return callBack;
-}
-
-int cs_data_pipe_wait_type(CSDataPipeNative *dataPipe) {
+int cs_data_pipe_wait_running(CSDataPipeNative *dataPipe) {
     //Wait type determines
-    while (dataPipe->_type == 0) {
+    int result = 0;
+    
+    while ( !(result = dataPipe->_status & CS_DP_STATUS_RUNNING) ) {
         pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
         pthread_cond_wait(&(dataPipe->_status_sync_cond), &(dataPipe->_status_sync_mutex));
         pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
     }
-    return dataPipe->_type;
+    return result;
 }
 
-
-void cs_data_pipe_process_push(CSDataPipeNative *dataPipe) {
-    //Whether determines callback
-    PullCallBackPtr callBack = NULL;
-    if(!(callBack = cs_data_pipe_wait_callBack(dataPipe))) {
-        return;
+//TODO Use asynchronous locks first, and optimize to sleep() later
+int cs_data_pipe_wari_vsync_frequency(CSDataPipeNative *dataPipe) {
+    int result = dataPipe->_status & CS_DP_STATUS_VSYNC;
+    if (result) return result;
+    
+    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    if (!(dataPipe->_status & CS_DP_STATUS_VSYNC)){
+        pthread_cond_wait(&(dataPipe->_status_sync_cond), &(dataPipe->_status_sync_mutex));
     }
+    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
     
-    
-    cs_data_pipe_push_data_implement(dataPipe,callBack);
+    result = dataPipe->_status & CS_DP_STATUS_VSYNC;
+    return result;
 }
 
-void cs_data_pipe_process_pull(CSDataPipeNative *dataPipe) {
-    //Whether is over for each round
-    while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
-        
-        //Determines runing mode
-        if (!cs_data_pipe_wait_type(dataPipe)){
-            continue;
-        }
-        
-        //Push mode first!!!
-        if(dataPipe->_type & CS_DP_TYPES_PUSH) {
-            cs_data_pipe_process_push(dataPipe);
-        }else if(dataPipe->_type & CS_DP_TYPES_PULL) {
-            cs_data_pipe_process_pull(dataPipe);
-        }else {
-            dataPipe->_status = CS_DP_STATUS_CLOSE;
-        }
-        
-        
-        
-        
+
+void cs_data_pipe_process(CSDataPipeNative *dataPipe) {
+    
+    CSProcessUnitNative* endProcessor = dataPipe->_outPutNode;
+    cs_processor_process(dataPipe, endProcessor);
+    
+
+    PullCallBackPtr callBack = dataPipe->_callback;
+    if(callBack != NULL) {
+        CSDataWrapNative* dataWrap = cs_data_cache_lock_data_cache(endProcessor);
+        callBack("1",dataWrap);
+        cs_data_cache_unlock_data_cache(dataPipe);
     }
 }
+
 
 
 
 
 static void* cs_data_pipe_thread_proc(void *param)
 {
-    CSDataPipeNative   *dataPipe = (CSDataPipeNative*)param;
+    CSDataPipeNative *dataPipe = (CSDataPipeNative*)param;
 
+    // #1 Whether is over for each round
     while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
-
         
+        //Determines runing mode
+        if (!cs_data_pipe_wait_running(dataPipe)){
+            continue;
+        }
+        
+        //Determine Vsync frequency
+        if (!cs_data_pipe_wari_vsync_frequency(dataPipe)){
+            continue;
+        }
+        
+        
+        cs_data_pipe_process(dataPipe);
     }
     return NULL;
 }
