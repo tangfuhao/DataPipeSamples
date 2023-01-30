@@ -6,6 +6,7 @@
 //
 
 #include "DataPipe.h"
+#include "DataPipe_Internal.h"
 #include <stdlib.h>
 
 
@@ -119,13 +120,12 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
 
 
 //Internal
-CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
-    if(unit->_onProcessFunc != NULL){
-        unit->_onProcessFunc();
+void cs_process_unit_on_init(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    if (unit->_onIntFunc != NULL) {
+        unit->_onIntFunc();
+        unit->_status = unit->_status | CS_PU_STATUS_INIT;
     }
-    return unit->_outputData;
 }
-
 
 void cs_process_unit_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     for (int i = 0; i < unit->_dependentUnitCount; i++) {
@@ -140,11 +140,29 @@ void cs_process_unit_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnit
     }
 }
 
-void cs_process_unit_on_init(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
-    if (unit->_onIntFunc != NULL) {
-        unit->_onIntFunc();
-        unit->_status = unit->_status | CS_PU_STATUS_INIT;
+
+CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    if(unit->_onProcessFunc != NULL){
+        unit->_onProcessFunc();
     }
+    return unit->_outputData;
+}
+
+CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    
+    //on init
+    if (!(unit->_status & CS_PU_STATUS_INIT)){
+        cs_process_unit_on_init(dataPipe, unit);
+    }
+    
+    //on process
+    cs_process_unit_process_dependent(dataPipe, unit);
+    
+    return cs_process_unit_on_process(dataPipe, unit);
+}
+
+CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource) {
+    return NULL;
 }
 
 
@@ -162,21 +180,6 @@ void cs_data_processor_release(CSProcessUnitNative* processor) {
     free(processor);
 }
 
-CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
-    
-    //on init
-    if (!(unit->_status & CS_PU_STATUS_INIT)){
-        cs_process_unit_on_init(dataPipe, unit);
-    }
-    
-    //on process
-    cs_process_unit_process_dependent(dataPipe, unit);
-    return cs_process_unit_on_process(dataPipe, unit);
-}
-
-CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource) {
-    return NULL;
-}
 
 
 void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource) {

@@ -207,18 +207,16 @@ void cs_data_source_release(CSDataSourceNative *source);
  Data Processor
  */
 
-
+//create and release
 CSProcessUnitNative* cs_data_processor_create(void);
 void cs_data_processor_release(CSProcessUnitNative* processor);
 
-CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
-CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
-
-CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex);
-
-
+//connect
 void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource);
 void cs_data_processor_connect_processor_dep(CSProcessUnitNative* processor,CSProcessUnitNative *dep_processor);
+
+//data
+CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex);
 
 
 /**

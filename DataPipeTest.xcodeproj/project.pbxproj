@@ -31,6 +31,7 @@
 		7B65CE3A2984CF7C0048A751 /* CameraCapture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraCapture.swift; sourceTree = "<group>"; };
 		7B65CE3C29860CDE0048A751 /* CustomProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomProcessor.swift; sourceTree = "<group>"; };
 		7B65CE3E298622AA0048A751 /* YUV2RGBProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YUV2RGBProcessor.swift; sourceTree = "<group>"; };
+		7B65CE40298769FD0048A751 /* DataPipe_Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataPipe_Internal.h; sourceTree = "<group>"; };
 		7BCF498D29794698002BA8EF /* DataPipeTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DataPipeTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BCF499029794698002BA8EF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7BCF499229794698002BA8EF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -105,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				7BCF49A6297946BB002BA8EF /* DataPipe.h */,
+				7B65CE40298769FD0048A751 /* DataPipe_Internal.h */,
 				7BCF49A7297946BB002BA8EF /* DataPipe.c */,
 				7BCF49A5297946BA002BA8EF /* DataPipeTest-Bridging-Header.h */,
 			);
