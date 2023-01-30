@@ -19,7 +19,7 @@ enum CSDataFormat {
 
 
 protocol CSDataSourceProtocol {
-    //push pixel to source
+    //Push pixel to source
     func pushPixelData(pixelBuffer: CVPixelBuffer)
 
 }
@@ -80,6 +80,7 @@ class CSDataSource : CSUnitBase<CSDataSourceNative>, CSDataSourceProtocol {
         }
         
         
+        //Store data to cache
         CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
         
         let width = CVPixelBufferGetWidth(pixelBuffer)

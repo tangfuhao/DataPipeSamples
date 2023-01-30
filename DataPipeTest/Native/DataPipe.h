@@ -19,15 +19,16 @@ typedef struct
     
 } CSDataWrapNative;
 
-//define data callback function
+//Define data callback function
 typedef void (*PullCallBackPtr)(const char* id, CSDataWrapNative*);
 
 typedef void (*PUInitCallBackPtr)(void);
+typedef void (*PUReleaseCallBackPtr)(void);
 typedef void (*PUProcessCallBackPtr)(void);
 
 
 
-//data cache
+//Data cache
 typedef struct
 {
 
@@ -40,51 +41,56 @@ typedef struct
 } CSDataCacheNative;
 
 
-//data header
+//Data header
 typedef struct
 {
 
     CSDataCacheNative cache;
+    //Context type
+    #define CS_TYPE_SOURCE          (1 << 0)
+    #define CS_TYPE_PROCESSOR       (1 << 1)
     int context_type;
     
+    //Register function
+    PUInitCallBackPtr               _onIntFunc;
+    PUReleaseCallBackPtr            _onReleaseFunc;
+    
+    //Status sync
+    #define CS_STATUS_INIT    (1 << 0)  // process uint inited
+    int             _status;
 } CSDataHeaderNative;
 
 
 
-//input data source
+//Input data source
 typedef struct
 {
-    CSDataHeaderNative header;
-    
+    CSDataHeaderNative              header;
 } CSDataSourceNative;
 
 
 
-//process unit
+//Process unit
 typedef struct
 {
     CSDataHeaderNative header;
     
-    #define CS_PU_STATUS_INIT    (1 << 0)  // process uint inited
-    #define CONNECT_NODE_MAX        3
-    int             _status;
+    //Register function
+    PUProcessCallBackPtr        _onProcessFunc;
     
-    
-    PUInitCallBackPtr           _onIntFunc;
-    
+    //Dependent unit
     int                 _dependentUnitCount;
-//    int                 _dependentSourceCount;
-    
-    PUProcessCallBackPtr _onProcessFunc;
-    CSDataWrapNative*         _outputData;
-    
     void**              _dependentInputPtr;
+
+    
+    #define CONNECT_NODE_MAX        3
+    
 
 } CSProcessUnitNative;
 
 typedef struct
 {
-    // thread
+    // Thread
     #define CS_DP_STATUS_PAUSE    (1 << 0)  // datapipe pause
     #define CS_DP_STATUS_CLOSE      (1 << 1)  // datapipe close
     #define CS_DP_STATUS_RUNNING      (1 << 2)  // datapipe running
@@ -118,14 +124,21 @@ typedef struct
  */
 
 
+//init
 CSDataPipeNative* cs_data_pipe_create(void);
 void cs_data_pipe_release(CSDataPipeNative* dataPipe);
 
-void cs_data_pipe_resume(CSDataPipeNative* dataPipe);
-void cs_data_pipe_pause(CSDataPipeNative* dataPipe);
 
-// pull data from data pipe
-void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
+//contorl
+void cs_data_pipe_pause(CSDataPipeNative* dataPipe);
+void cs_data_pipe_resume(CSDataPipeNative* dataPipe);
+
+
+
+
+//void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
+// Receiver data from data pipe
+void cs_data_pipe_register_receiver(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
 
 
 /**
@@ -207,15 +220,15 @@ void cs_data_source_release(CSDataSourceNative *source);
  Data Processor
  */
 
-//create and release
+//Create and release
 CSProcessUnitNative* cs_data_processor_create(void);
 void cs_data_processor_release(CSProcessUnitNative* processor);
 
-//connect
+//Connect
 void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource);
 void cs_data_processor_connect_processor_dep(CSProcessUnitNative* processor,CSProcessUnitNative *dep_processor);
 
-//data
+//Data
 CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex);
 
 

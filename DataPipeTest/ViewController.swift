@@ -16,7 +16,7 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         
-        //create data pipe
+        //Create data pipe
         let dataPipe = CSDataPipe()
         self.dataPipe = dataPipe
         
@@ -25,9 +25,11 @@ class ViewController: UIViewController {
         dataProcesser.connectInput(input: dataSource)
         dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
         
-        dataPipe.receiverCVPixelBuffer { pixelBuffer in
+        dataPipe.ReceiveData { pixelBuffer in
             print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
         }
+        
+        dataPipe.PullPixelData()
         
         
 

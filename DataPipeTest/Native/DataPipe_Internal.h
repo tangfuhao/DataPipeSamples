@@ -15,13 +15,15 @@
  Data Processor
  */
 
-void cs_process_unit_on_init(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
-void cs_process_unit_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
 
-CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
+void cs_header_process_init(CSDataPipeNative *dataPipe, CSDataHeaderNative* header);
 
-CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUnitNative* unit);
-CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
+void cs_processor_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
+void cs_processor_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
+
+void cs_processor_init_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
+void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit);
+
 
 /**
  ==============================================================

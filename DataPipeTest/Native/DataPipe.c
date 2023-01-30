@@ -10,11 +10,20 @@
 #include <stdlib.h>
 
 
-//implement for pull data
-void cs_data_pipe_pull_data_implement(CSDataPipeNative *dataPipe, PullCallBackPtr pullCallBack) {
+//////////////////////////////////////////////////////////////////
+///Data Processor
+///
+
+
+///Internal
+
+//Implement for push data
+void cs_data_pipe_push_data_implement(CSDataPipeNative *dataPipe, PullCallBackPtr pullCallBack) {
     CSProcessUnitNative* outputNode = dataPipe->_outPutNode;
-    CSDataWrapNative* dataWrap = cs_process_unit_process(dataPipe, outputNode);
+    cs_processor_process(dataPipe, outputNode);
+    CSDataWrapNative* dataWrap = cs_data_cache_lock_data_cache(dataPipe);
     pullCallBack("1",dataWrap);
+    cs_data_cache_unlock_data_cache(dataPipe);
 }
 
 PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipeNative *dataPipe) {
@@ -31,33 +40,52 @@ PullCallBackPtr cs_data_pipe_wait_callBack(CSDataPipeNative *dataPipe) {
 }
 
 int cs_data_pipe_wait_type(CSDataPipeNative *dataPipe) {
-    //wait type determines
+    //Wait type determines
     while (dataPipe->_type == 0) {
         pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
         pthread_cond_wait(&(dataPipe->_status_sync_cond), &(dataPipe->_status_sync_mutex));
         pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
     }
     return dataPipe->_type;
+}
+
+
+void cs_data_pipe_process_push(CSDataPipeNative *dataPipe) {
+    //Whether determines callback
+    PullCallBackPtr callBack = NULL;
+    if(!(callBack = cs_data_pipe_wait_callBack(dataPipe))) {
+        return;
+    }
     
+    
+    cs_data_pipe_push_data_implement(dataPipe,callBack);
 }
 
 void cs_data_pipe_process_pull(CSDataPipeNative *dataPipe) {
-    //whether is over for each round
+    //Whether is over for each round
     while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
-
-        //whether determines callback
-        PullCallBackPtr callBack = NULL;
-        if(!(callBack = cs_data_pipe_wait_callBack(dataPipe))) {
+        
+        //Determines runing mode
+        if (!cs_data_pipe_wait_type(dataPipe)){
             continue;
         }
         
-        cs_data_pipe_pull_data_implement(dataPipe,callBack);
+        //Push mode first!!!
+        if(dataPipe->_type & CS_DP_TYPES_PUSH) {
+            cs_data_pipe_process_push(dataPipe);
+        }else if(dataPipe->_type & CS_DP_TYPES_PULL) {
+            cs_data_pipe_process_pull(dataPipe);
+        }else {
+            dataPipe->_status = CS_DP_STATUS_CLOSE;
+        }
+        
+        
+        
+        
     }
 }
 
-void cs_data_pipe_process_push(CSDataPipeNative *datapipe) {
-    
-}
+
 
 
 static void* cs_data_pipe_thread_proc(void *param)
@@ -65,31 +93,23 @@ static void* cs_data_pipe_thread_proc(void *param)
     CSDataPipeNative   *dataPipe = (CSDataPipeNative*)param;
 
     while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
-        //whether determines type
-        if (!cs_data_pipe_wait_type(dataPipe)){
-            continue;
-        }
+
         
-        if(dataPipe->_type == CS_DP_TYPES_PUSH) {
-            cs_data_pipe_process_push(param);
-        }else if(dataPipe->_type == CS_DP_TYPES_PULL) {
-            cs_data_pipe_process_pull(param);
-        }else {
-            dataPipe->_status = CS_DP_STATUS_CLOSE;
-        }
     }
     return NULL;
 }
 
 
 
+///Public
+
 CSDataPipeNative* cs_data_pipe_create(void) {
     CSDataPipeNative *dataPipe = NULL;
-    // alloc dataPipe context
+    // Alloc dataPipe context
     dataPipe = (CSDataPipeNative*)calloc(1, sizeof(CSDataPipeNative));
     if (!dataPipe) return NULL;
     
-    //init
+    //Init
     pthread_mutex_init(&dataPipe->_status_sync_mutex, NULL);
     pthread_cond_init(&dataPipe->_status_sync_cond, NULL);
     pthread_cond_init(&dataPipe->_params_sync_cond, NULL);
@@ -103,16 +123,26 @@ void cs_data_pipe_release(CSDataPipeNative* dataPipe) {
     free(dataPipe);
 }
 
-void cs_data_pipe_resume(CSDataPipeNative* dataPipe) {
-    
-}
 
 void cs_data_pipe_pause(CSDataPipeNative* dataPipe) {
     
 }
 
-void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback) {
+void cs_data_pipe_resume(CSDataPipeNative* dataPipe) {
     
+}
+
+
+//void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback) {
+//    if (callback == NULL){
+//        //Pause data pipe
+//
+//        return;
+//    }
+//}
+
+void cs_data_pipe_register_receiver(CSDataPipeNative* dataPipe,PullCallBackPtr callback) {
+    dataPipe->_callback = callback;
 }
 
 //////////////////////////////////////////////////////////////////
@@ -120,56 +150,86 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
 
 
 //Internal
-void cs_process_unit_on_init(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
-    if (unit->_onIntFunc != NULL) {
-        unit->_onIntFunc();
-        unit->_status = unit->_status | CS_PU_STATUS_INIT;
-    }
-}
 
-void cs_process_unit_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
-    for (int i = 0; i < unit->_dependentUnitCount; i++) {
-        CSDataHeaderNative* dataHeader = unit->_dependentInputPtr[i];
-        if(dataHeader->context_type == 0){
-            CSDataSourceNative* childSource = (CSDataSourceNative*)dataHeader;
-            cs_process_source_process(dataPipe, childSource);
-        }else{
-            CSProcessUnitNative* childUnit = (CSProcessUnitNative*)dataHeader;
-            cs_process_unit_process(dataPipe, childUnit);
-        }
-    }
-}
-
-
-CSDataWrapNative* cs_process_unit_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+void cs_processor_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     if(unit->_onProcessFunc != NULL){
         unit->_onProcessFunc();
     }
-    return unit->_outputData;
 }
 
-CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
-    
-    //on init
-    if (!(unit->_status & CS_PU_STATUS_INIT)){
-        cs_process_unit_on_init(dataPipe, unit);
+void cs_processor_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    // Load Dependent
+    for (int i = 0; i < unit->_dependentUnitCount; i++) {
+        CSDataHeaderNative* dataHeader = unit->_dependentInputPtr[i];
+        
+        //5.Processor continue loading dependencies
+        if(dataHeader->context_type == CS_TYPE_PROCESSOR){
+            CSProcessUnitNative* childUnit = (CSProcessUnitNative*)dataHeader;
+            cs_processor_process_dependent(dataPipe, childUnit);
+        }
     }
     
-    //on process
-    cs_process_unit_process_dependent(dataPipe, unit);
-    
-    return cs_process_unit_on_process(dataPipe, unit);
+    //Handle Process
+    cs_processor_on_process(dataPipe,unit);
 }
 
-CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource) {
-    return NULL;
+
+//8. Load Init Function
+void cs_header_process_init(CSDataPipeNative *dataPipe, CSDataHeaderNative* header) {
+    if (header->_onIntFunc != NULL) {
+        header->_onIntFunc();
+    }
+    header->_status = header->_status | CS_STATUS_INIT;
 }
+
+//2. Loading Init dependencies
+void cs_processor_init_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    CSDataHeaderNative *header = (CSDataHeaderNative*)unit;
+    
+    //3. If loaded Init,then return
+    if ((header->_status & CS_STATUS_INIT)){
+        return;
+    }
+    
+    //4. Load Dependent
+    for (int i = 0; i < unit->_dependentUnitCount; i++) {
+        CSDataHeaderNative* dataHeader = unit->_dependentInputPtr[i];
+        
+        //5.Processor continue loading dependencies
+        if(dataHeader->context_type == CS_TYPE_PROCESSOR){
+            CSProcessUnitNative* childUnit = (CSProcessUnitNative*)dataHeader;
+            cs_processor_process_dependent(dataPipe, childUnit);
+        }else{
+            //6.Source load init
+            cs_header_process_init(dataPipe, dataHeader);
+        }
+    }
+    
+    //7. Load init for self
+    cs_header_process_init(dataPipe, (CSDataHeaderNative*)unit);
+}
+
+
+// 1.
+void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    //Load Init Dependent
+    cs_processor_init_dependent(dataPipe, unit);
+    
+    //Load Process Dependent
+    cs_processor_process_dependent(dataPipe, unit);
+}
+
+
+
+
+
+
 
 
 //Public
 CSProcessUnitNative* cs_data_processor_create(void) {
     CSProcessUnitNative *processor = NULL;
-    // alloc processor context
+    // Alloc processor context
     processor = (CSProcessUnitNative*)calloc(1, sizeof(CSProcessUnitNative));
     if (!processor) return NULL;
     return processor;
@@ -204,7 +264,7 @@ CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,i
 
 
 ////////////////////////////////////////////////////////////////
-///data source
+///Data source
 
 
 CSDataSourceNative* cs_data_source_create(void) {
@@ -226,7 +286,7 @@ void cs_data_source_release(CSDataSourceNative *source) {
 
 
 ////////////////////////////////////////////////////////////////
-///data cache
+///Data cache
 
 void cs_data_cache_create_data_cache(void *source, int dataSize) {
     CSDataCacheNative* cache = (CSDataCacheNative*)source;

@@ -16,18 +16,10 @@ public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
 
 class CSDataPipe {
-    public static func createDataPipe() -> CSDataPipe {
-        return CSDataPipe()
-    }
-    
-    static func getDataPipeFromId(id: String) -> CSDataPipe? {
-        return nil
-    }
-    
     let nativePtr: UnsafeMutablePointer<CSDataPipeNative>
-    
     var _pixelBuffer: CVPixelBuffer?
     var _pixelCallBack: PixelCallBack?
+    
     
     init() {
         nativePtr = cs_data_pipe_create()
@@ -81,8 +73,7 @@ class CSDataPipe {
     
     
     func handleReceiverCVPixelBuffer(dataPointer: UnsafeMutableRawPointer) {
-        guard let pixelBuffer = createOrCachePixelBuffer(),
-              let pixelCallBack = _pixelCallBack else {
+        guard let pixelBuffer = createOrCachePixelBuffer() else {
             return
         }
         
@@ -108,10 +99,48 @@ class CSDataPipe {
     }
     
     
-    func receiverCVPixelBuffer(callback: PixelCallBack?) {
-        _pixelCallBack = callback
+    
+    
+    
+    
+    
+}
+
+
+extension CSDataPipe {
+    public static func createDataPipe() -> CSDataPipe {
+        return CSDataPipe()
+    }
+    
+    static func getDataPipeFromId(id: String) -> CSDataPipe? {
+        return nil
+    }
+    
+    func Pause() {
         
-        cs_data_pipe_pull_data(nativePtr) { idNative, dataWrapperNative in
+    }
+    
+    func Resume() {
+        
+    }
+    
+    /**
+            
+     1. Passively receive data passed from main input source.
+     2. The receiving frequency is based on the frequency of the input source.
+     3. The callBack function called on main thread.
+     4. If passed callBack functioin is nil, the dataPipe will stop.
+     */
+    func ReceiveData(callBack: PixelCallBack?) {
+        _pixelCallBack = callBack
+        
+        
+        guard _pixelCallBack != nil else {
+            cs_data_pipe_register_receiver(nativePtr, nil)
+            return
+        }
+        
+        cs_data_pipe_register_receiver(nativePtr) { idNative, dataWrapperNative in
             guard let idNative = idNative,
                   let dataWrapperNative = dataWrapperNative else {
                 return
@@ -125,15 +154,18 @@ class CSDataPipe {
             guard let dataInC = dataWrapperNative.pointee.data else {
                 return
             }
-            
-        
-            
+
             dataPipe.handleReceiverCVPixelBuffer(dataPointer: dataInC)
         }
     }
     
-    
-    
-    
-    
+    /**
+            
+     1. Pull data proactively, possible pull to cache.
+     2. The frequency is based on the frequency of pull.
+     3. Need to stop datapipe manually When don't need to run the datapipe
+     */
+    func PullPixelData() -> CVPixelBuffer? {
+        return nil
+    }
 }

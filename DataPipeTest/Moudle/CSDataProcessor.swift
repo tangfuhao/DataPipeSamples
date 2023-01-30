@@ -26,7 +26,8 @@ protocol CSProcessorProtocol {
 
 
 class CSDataProcessor : CSUnitBase<CSProcessUnitNative>, CSProcessorProtocol {
-
+    
+    
     override func onInit() {
         nativePtr = cs_data_processor_create()
     }
