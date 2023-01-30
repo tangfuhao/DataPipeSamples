@@ -179,6 +179,17 @@ CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSou
 }
 
 
+void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource) {
+    processor->_dependentInputPtr[processor->_dependentUnitCount] = dep_dataSource;
+    processor->_dependentUnitCount += 1;
+}
+
+void cs_data_processor_connect_processor_dep(CSProcessUnitNative* processor,CSProcessUnitNative *dep_processor) {
+    processor->_dependentInputPtr[processor->_dependentUnitCount] = dep_processor;
+    processor->_dependentUnitCount += 1;
+}
+
+
 
 //TODO Read index is actively add 1
 CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex) {
@@ -204,26 +215,34 @@ void cs_data_source_release(CSDataSourceNative *source) {
     free(source);
 }
 
-CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source) {
-    CSDataCacheNative cache = source->header.cache;
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////
+///data cache
+
+void cs_data_cache_create_data_cache(void *source, int dataSize) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)source;
+    cache->_cacheBuffer[0] = malloc(dataSize);
+    cache->_cacheBuffer[1] = malloc(dataSize);
+}
+
+CSDataWrapNative* cs_data_cache_lock_data_cache(void *source) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)source;
     
-    
-    if(cache._readIndex == cache._writeIndex) {
-        return cache._cacheBuffer[cache._writeIndex + 1];
+    if(cache->_readIndex == cache->_writeIndex) {
+        return cache->_cacheBuffer[cache->_writeIndex + 1];
     }
     
-    return cache._cacheBuffer[cache._writeIndex];
+    return cache->_cacheBuffer[cache->_writeIndex];
+    
 }
 
-void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap) {
-    CSDataCacheNative cache = source->header.cache;
-    cache._writeIndex = (cache._writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
-}
-
-
-
-void cs_data_source_create_data_cache(CSDataSourceNative *source, int dataSize) {
-    CSDataCacheNative cache = source->header.cache;
-    cache._cacheBuffer[0] = malloc(dataSize);
-    cache._cacheBuffer[1] = malloc(dataSize);
+void cs_data_cache_unlock_data_cache(void *source) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)source;
+    cache->_writeIndex = (cache->_writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
 }

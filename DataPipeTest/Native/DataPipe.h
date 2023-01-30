@@ -134,6 +134,21 @@ void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback)
 
 
 
+/**
+ ==============================================================
+ Data Cache
+ */
+
+void cs_data_cache_create_data_cache(void *source, int dataSize);
+CSDataWrapNative* cs_data_cache_lock_data_cache(void *source);
+void cs_data_cache_unlock_data_cache(void *source);
+
+
+
+/**
+ ==============================================================
+ */
+
 
 
 
@@ -174,9 +189,6 @@ CSDataSourceNative* cs_data_source_create(void);
 void cs_data_source_release(CSDataSourceNative *source);
 
 
-void cs_data_source_create_data_cache(CSDataSourceNative *source, int dataSize);
-CSDataWrapNative* cs_data_source_lock_data_cache(CSDataSourceNative *source);
-void cs_data_source_unlock_data_cache(CSDataSourceNative *source, CSDataWrapNative* dataWrap);
 
 
 /**
@@ -203,6 +215,10 @@ CSDataWrapNative* cs_process_unit_process(CSDataPipeNative *dataPipe,CSProcessUn
 CSDataWrapNative* cs_process_source_process(CSDataPipeNative *dataPipe,CSDataSourceNative *dataSource);
 
 CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex);
+
+
+void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource);
+void cs_data_processor_connect_processor_dep(CSProcessUnitNative* processor,CSProcessUnitNative *dep_processor);
 
 
 /**

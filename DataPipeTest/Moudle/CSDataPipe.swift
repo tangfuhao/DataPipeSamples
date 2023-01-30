@@ -48,13 +48,7 @@ class CSDataPipe {
         mainOutput = output
     }
     
-    func connectPipe(input: CSDataSource, output: CSDataProcessor) {
-        
-    }
-    
-    func connectPipe(input: CSDataProcessor, output: CSDataProcessor) {
-        
-    }
+
     
     
     

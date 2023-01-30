@@ -16,21 +16,14 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         
-        //create data pipe topology
-
-        
-
-
-        
-        
         //create data pipe
         let dataPipe = CSDataPipe()
         self.dataPipe = dataPipe
         
         let dataSource = CameraSource()
         let dataProcesser = YUV2RGBProcessor()
+        dataProcesser.connectInput(input: dataSource)
         dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
-        dataPipe.connectPipe(input: dataSource, output: dataProcesser)
         
         dataPipe.receiverCVPixelBuffer { pixelBuffer in
             print("width: \(CVPixelBufferGetWidth(pixelBuffer))")

@@ -9,7 +9,7 @@ import Foundation
 import CoreVideo
 
 class YUV2RGBProcessor : CSDataProcessor {
-    var rgbPixelBuffer: CVPixelBuffer?
+    var rgbPixelBufferTemp: CVPixelBuffer?
     
     
     override func onInit() {
@@ -20,21 +20,31 @@ class YUV2RGBProcessor : CSDataProcessor {
     override func onProcess() {
         super.onProcess()
         
-        guard let inputPixel = getInputPixel(index: 0) else {
+        guard let pixelBuffer = getInputPixel(index: 0),
+              let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
             return
         }
-//
-//        let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: inputPixel)
         
-        
-        
+        pushPixelData(pixelBuffer: rgbPixelBuffer)
     }
     
-//    func getRGBPixelBuffer(yuvPixelBuffer: CVPixelBuffer) -> CVPixelBuffer {
-//        if (rgbPixelBuffer ==  nil){
-//            let width = CVPixelBufferGetWidth(yuvPixelBuffer)
-//        }
-//
-//
-//    }
+    func getRGBPixelBuffer(yuvPixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
+        if (rgbPixelBufferTemp ==  nil){
+            let width = CVPixelBufferGetWidth(yuvPixelBuffer)
+            let height = CVPixelBufferGetHeight(yuvPixelBuffer)
+            var pixelBuffer: CVPixelBuffer?
+            let status = CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA, nil, &pixelBuffer)
+
+            if status != kCVReturnSuccess {
+                print("Error creating pixel buffer")
+                return nil
+            }
+            rgbPixelBufferTemp = pixelBuffer
+            return pixelBuffer
+        }
+        
+        return rgbPixelBufferTemp
+
+
+    }
 }

@@ -70,7 +70,7 @@ class CSDataSource : CSUnitBase<CSDataSourceNative>, CSDataSourceProtocol {
             break
         }
         
-        cs_data_source_create_data_cache(nativePtr, Int32(cacheSize))
+        cs_data_cache_create_data_cache(nativePtr, Int32(cacheSize))
     }
 
     
@@ -88,14 +88,14 @@ class CSDataSource : CSUnitBase<CSDataSourceNative>, CSDataSourceProtocol {
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
 
         // Create the pointer to the destination memory
-        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_source_lock_data_cache(nativePtr)
+        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_cache_lock_data_cache(nativePtr)
         let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
         for row in 0..<height {
             let src = baseAddress!.advanced(by: row * bytesPerRow)
             let dest = destinationPointer.advanced(by: row * width * 4)
             memcpy(dest, src, width * 4)
         }
-        cs_data_source_unlock_data_cache(nativePtr, dataCachePointer)
+        cs_data_cache_unlock_data_cache(nativePtr)
         
         CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
     }
