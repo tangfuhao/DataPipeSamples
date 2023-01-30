@@ -16,9 +16,10 @@ public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
 
 class CSDataPipe {
-    let nativePtr: UnsafeMutablePointer<CSDataPipeNative>
+    let nativePtr: UnsafeMutableRawPointer?
     var _pixelBuffer: CVPixelBuffer?
     var _pixelCallBack: PixelCallBack?
+    
     
     
     init() {
@@ -38,6 +39,8 @@ class CSDataPipe {
     func setMainInputAndOutput(input: CSDataSource, output: CSDataProcessor) {
         mainSource = input
         mainOutput = output
+        
+        
     }
     
 

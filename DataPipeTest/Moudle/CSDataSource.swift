@@ -17,23 +17,55 @@ enum CSDataFormat {
 }
 
 
-
-protocol CSDataSourceProtocol {
-    //Push pixel to source
+protocol CSUnitBaseProtocol {
+    func onInit()
+    func onRelease()
     func pushPixelData(pixelBuffer: CVPixelBuffer)
-
 }
 
-
-
-
-
-class CSUnitBase<Model> {
-    var nativePtr: UnsafeMutablePointer<Model>? = nil
+class CSUnitBase : CSUnitBaseProtocol{
+    var nativePtr: UnsafeMutableRawPointer?
     var inputType: CSDataFormat = .Undefine
+    var isDetermineCacheSize = false
+    
+    init() {
+        guard let nativePtr = cs_data_source_create() else {
+            return
+        }
+        
+        self.nativePtr = nativePtr
+        
+        var unitWeakRef = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        
+        //TODO: - note! there is strong reference!
+        cs_data_source_register_onInit_function(nativePtr) { pointer in
+            guard let pointer = pointer else {
+                return
+            }
+            
+            let unitWeakRef = Unmanaged<CSUnitBase>.fromOpaque(pointer).takeUnretainedValue()
+            unitWeakRef.onInit()
+        }
+        
+//        cs_data_source_register_onInit_function(nativePtr) {
+//
+//        }
+//
+        cs_data_source_register_onRelease_function(nativePtr) { pointer in
+            guard let pointer = pointer else {
+                return
+            }
+            
+            let unitWeakRef = Unmanaged<CSUnitBase>.fromOpaque(pointer).takeUnretainedValue()
+            unitWeakRef.onRelease()
+        }
+    }
+    
     
     func onInit() {}
     func onRelease() {}
+    
+    
     func registerInputDataFormat(index: Int, type: CSDataFormat){
         if index != 0 {
             fatalError("Current index variable only support zero!!")
@@ -41,40 +73,35 @@ class CSUnitBase<Model> {
         
         inputType = type
     }
+    
+    func pushPixelData(pixelBuffer: CVPixelBuffer) {
+        if (!isDetermineCacheSize) {
+            var cacheSize = 0
+            switch inputType {
+            case .PixelBuffer:
+                cacheSize = 360*240*4
+                break
+            case .PCMData:
+                break
+            case .JsonData:
+                break
+            case .Undefine:
+                break
+            }
+            
+            cs_data_cache_create_data_cache(nativePtr, Int32(cacheSize))
+            isDetermineCacheSize = true
+        }
+    }
+    
 }
 
 
-class CSDataSource : CSUnitBase<CSDataSourceNative>, CSDataSourceProtocol {
-    
-    
-    override func onInit() {
-        nativePtr = cs_data_source_create()
-    }
-    
-    
-    override func registerInputDataFormat(index: Int, type: CSDataFormat) {
-        super.registerInputDataFormat(index: index, type: type)
-        
-        
-        //TODO: - Need confirm the specific value
-        var cacheSize = 0
-        switch inputType {
-        case .PixelBuffer:
-            cacheSize = 360*240*4
-            break
-        case .PCMData:
-            break
-        case .JsonData:
-            break
-        case .Undefine:
-            break
-        }
-        
-        cs_data_cache_create_data_cache(nativePtr, Int32(cacheSize))
-    }
+class CSDataSource : CSUnitBase {
 
-    
-    func pushPixelData(pixelBuffer: CVPixelBuffer) {
+    override func pushPixelData(pixelBuffer: CVPixelBuffer) {
+        super.pushPixelData(pixelBuffer: pixelBuffer)
+        
         if inputType != .PixelBuffer {
             fatalError("InputType is wrong")
         }

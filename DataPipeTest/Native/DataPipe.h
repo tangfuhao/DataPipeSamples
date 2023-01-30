@@ -22,8 +22,8 @@ typedef struct
 //Define data callback function
 typedef void (*PullCallBackPtr)(const char* id, CSDataWrapNative*);
 
-typedef void (*PUInitCallBackPtr)(void);
-typedef void (*PUReleaseCallBackPtr)(void);
+typedef void (*PUInitCallBackPtr)(void* swiftObjPtr);
+typedef void (*PUReleaseCallBackPtr)(void* swiftObjPtr);
 typedef void (*PUProcessCallBackPtr)(void);
 
 
@@ -126,20 +126,17 @@ typedef struct
 
 
 //init
-CSDataPipeNative* cs_data_pipe_create(void);
-void cs_data_pipe_release(CSDataPipeNative* dataPipe);
+void* cs_data_pipe_create(void);
+void cs_data_pipe_release(void* dataPipePtr);
 
 
 //contorl
-void cs_data_pipe_pause(CSDataPipeNative* dataPipe);
-void cs_data_pipe_resume(CSDataPipeNative* dataPipe);
+void cs_data_pipe_pause(void* dataPipePtr);
+void cs_data_pipe_resume(void* dataPipePtr);
 
 
-
-
-//void cs_data_pipe_pull_data(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
 // Receiver data from data pipe
-void cs_data_pipe_register_receiver(CSDataPipeNative* dataPipe,PullCallBackPtr callback);
+void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback);
 
 
 /**
@@ -153,9 +150,9 @@ void cs_data_pipe_register_receiver(CSDataPipeNative* dataPipe,PullCallBackPtr c
  Data Cache
  */
 
-void cs_data_cache_create_data_cache(void *source, int dataSize);
-CSDataWrapNative* cs_data_cache_lock_data_cache(void *source);
-void cs_data_cache_unlock_data_cache(void *source);
+void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize);
+CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr);
+void cs_data_cache_unlock_data_cache(void *sourcePtr);
 
 
 
@@ -199,10 +196,13 @@ void cs_data_cache_unlock_data_cache(void *source);
 
 
 
-CSDataSourceNative* cs_data_source_create(void);
-void cs_data_source_release(CSDataSourceNative *source);
+void* cs_data_source_create(void);
+void cs_data_source_release(void* sourcePtr);
 
 
+
+void cs_data_source_register_onInit_function(void* sourcePtr, PUInitCallBackPtr callBack);
+void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBackPtr callBack);
 
 
 /**
@@ -222,17 +222,16 @@ void cs_data_source_release(CSDataSourceNative *source);
  */
 
 //Create and release
-CSProcessUnitNative* cs_data_processor_create(void);
-void cs_data_processor_release(CSProcessUnitNative* processor);
+void* cs_data_processor_create(void);
+void cs_data_processor_release(void* processorPtr);
 
 //Connect
-void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource);
-void cs_data_processor_connect_processor_dep(CSProcessUnitNative* processor,CSProcessUnitNative *dep_processor);
+void cs_data_processor_connect_dep(void* processorPtr,void* depPtr);
 
 //Data
-CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex);
+CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputIndex);
 
-
+cs_data_processor_register_onProcess_function(void* sourcePtr, PUProcessCallBackPtr callBack);
 /**
  ==============================================================
  */

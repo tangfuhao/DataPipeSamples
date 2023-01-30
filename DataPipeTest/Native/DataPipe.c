@@ -89,7 +89,7 @@ static void* cs_data_pipe_thread_proc(void *param)
 
 ///Public
 
-CSDataPipeNative* cs_data_pipe_create(void) {
+void* cs_data_pipe_create(void) {
     CSDataPipeNative *dataPipe = NULL;
     // Alloc dataPipe context
     dataPipe = (CSDataPipeNative*)calloc(1, sizeof(CSDataPipeNative));
@@ -105,17 +105,32 @@ CSDataPipeNative* cs_data_pipe_create(void) {
     return dataPipe;
 }
 
-void cs_data_pipe_release(CSDataPipeNative* dataPipe) {
+void cs_data_pipe_release(void* dataPipePtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    
     free(dataPipe);
 }
 
 
-void cs_data_pipe_pause(CSDataPipeNative* dataPipe) {
-    
+void cs_data_pipe_pause(void* dataPipePtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    dataPipe->_status |= ~CS_DP_STATUS_RUNNING;
 }
 
-void cs_data_pipe_resume(CSDataPipeNative* dataPipe) {
+void cs_data_pipe_resume(void* dataPipePtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
     
+    if(dataPipe->_status & CS_DP_STATUS_RUNNING) return;
+    
+    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    if(!(dataPipe->_status & CS_DP_STATUS_RUNNING)){
+        dataPipe->_status |=  CS_DP_STATUS_RUNNING;
+        pthread_cond_signal(&(dataPipe->_status_sync_cond));
+    }
+    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
 }
 
 
@@ -127,7 +142,10 @@ void cs_data_pipe_resume(CSDataPipeNative* dataPipe) {
 //    }
 //}
 
-void cs_data_pipe_register_receiver(CSDataPipeNative* dataPipe,PullCallBackPtr callback) {
+void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    
     dataPipe->_callback = callback;
 }
 
@@ -163,7 +181,7 @@ void cs_processor_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNat
 //8. Load Init Function
 void cs_header_process_init(CSDataPipeNative *dataPipe, CSDataHeaderNative* header) {
     if (header->_onIntFunc != NULL) {
-        header->_onIntFunc();
+        header->_onIntFunc(NULL);
     }
     header->_status = header->_status | CS_STATUS_INIT;
 }
@@ -213,7 +231,7 @@ void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit)
 
 
 //Public
-CSProcessUnitNative* cs_data_processor_create(void) {
+void* cs_data_processor_create(void) {
     CSProcessUnitNative *processor = NULL;
     // Alloc processor context
     processor = (CSProcessUnitNative*)calloc(1, sizeof(CSProcessUnitNative));
@@ -222,28 +240,40 @@ CSProcessUnitNative* cs_data_processor_create(void) {
 }
 
 
-void cs_data_processor_release(CSProcessUnitNative* processor) {
+void cs_data_processor_release(void* processorPtr) {
+    CSDataPipeNative *processor = (CSDataPipeNative *)processorPtr;
+    if(!processor) return;
+    
     free(processor);
 }
 
 
 
-void cs_data_processor_connect_source_dep(CSProcessUnitNative* processor,CSDataSourceNative *dep_dataSource) {
-    processor->_dependentInputPtr[processor->_dependentUnitCount] = dep_dataSource;
+void cs_data_processor_connect_dep(void* processorPtr,void *depPtr) {
+    CSProcessUnitNative *processor = (CSProcessUnitNative *)processorPtr;
+    if(!processor) return;
+    
+    CSDataHeaderNative *dependentUnit = (CSDataHeaderNative *)depPtr;
+    if(!dependentUnit) return;
+    
+    
+    processor->_dependentInputPtr[processor->_dependentUnitCount] = dependentUnit;
     processor->_dependentUnitCount += 1;
 }
 
-void cs_data_processor_connect_processor_dep(CSProcessUnitNative* processor,CSProcessUnitNative *dep_processor) {
-    processor->_dependentInputPtr[processor->_dependentUnitCount] = dep_processor;
-    processor->_dependentUnitCount += 1;
-}
+
 
 
 
 //TODO Read index is actively add 1
-CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,int inputIndex) {
-    void* dependentInputItem = source->_dependentInputPtr[inputIndex];
-    CSDataCacheNative* dataCache = (CSDataCacheNative*)dependentInputItem;
+CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputIndex) {
+    CSProcessUnitNative *processor = (CSProcessUnitNative *)processorPtr;
+    if(!processor) return NULL;
+    
+    void* dependentUnit = processor->_dependentInputPtr[inputIndex];
+    CSDataCacheNative* dataCache = (CSDataCacheNative*)dependentUnit;
+    if(!dataCache) return NULL;
+    
     return dataCache->_cacheBuffer[dataCache->_readIndex];
 }
 
@@ -253,20 +283,37 @@ CSDataWrapNative* cs_data_processor_get_input_data(CSProcessUnitNative *source,i
 ///Data source
 
 
-CSDataSourceNative* cs_data_source_create(void) {
+void* cs_data_source_create(void) {
     CSDataSourceNative *source = NULL;
     source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
     if (!source) return NULL;
     return source;
 }
 
-void cs_data_source_release(CSDataSourceNative *source) {
+void cs_data_source_release(void *sourcePtr) {
+    CSDataSourceNative *source = NULL;
+    source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
+    if (!source) return;
+    
     free(source);
 }
 
 
+void cs_data_source_register_onInit_function(void* sourcePtr, PUInitCallBackPtr callBack) {
+    CSDataHeaderNative *source = NULL;
+    source = (CSDataHeaderNative*)calloc(1, sizeof(CSDataHeaderNative));
+    if (!source) return;
+    
+    source->_onIntFunc = callBack;
+}
 
-
+void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBackPtr callBack) {
+    CSDataHeaderNative *source = NULL;
+    source = (CSDataHeaderNative*)calloc(1, sizeof(CSDataHeaderNative));
+    if (!source) return;
+    
+    source->_onReleaseFunc = callBack;
+}
 
 
 
@@ -274,14 +321,14 @@ void cs_data_source_release(CSDataSourceNative *source) {
 ////////////////////////////////////////////////////////////////
 ///Data cache
 
-void cs_data_cache_create_data_cache(void *source, int dataSize) {
-    CSDataCacheNative* cache = (CSDataCacheNative*)source;
+void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     cache->_cacheBuffer[0] = malloc(dataSize);
     cache->_cacheBuffer[1] = malloc(dataSize);
 }
 
-CSDataWrapNative* cs_data_cache_lock_data_cache(void *source) {
-    CSDataCacheNative* cache = (CSDataCacheNative*)source;
+CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     
     if(cache->_readIndex == cache->_writeIndex) {
         return cache->_cacheBuffer[cache->_writeIndex + 1];
@@ -291,7 +338,7 @@ CSDataWrapNative* cs_data_cache_lock_data_cache(void *source) {
     
 }
 
-void cs_data_cache_unlock_data_cache(void *source) {
-    CSDataCacheNative* cache = (CSDataCacheNative*)source;
+void cs_data_cache_unlock_data_cache(void *sourcePtr) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     cache->_writeIndex = (cache->_writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
 }
