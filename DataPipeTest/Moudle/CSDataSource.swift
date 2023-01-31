@@ -42,16 +42,22 @@ public class CSDataType {
     
     init(format: CSDataFormat, pixelParams: CSPixelParams) {
         self.format = format
+        self.pixelParams = pixelParams
     }
     
     init(format: CSDataFormat, pcmParams: CSPcmParams) {
         self.format = format
+        self.pcmParams = pcmParams
     }
     
     
     //TODO need fix bugs
-    func getPixelSizeFromColorSpace(colorSpace: CSColorSpace) -> Float{
-        switch colorSpace {
+    func getPixelSize() -> Float{
+        guard let pixelParams = pixelParams else {
+            return 0
+        }
+        
+        switch pixelParams.colorSpace {
         case .NV21:
             return 1.5
         case .BGRA32: break
@@ -63,14 +69,12 @@ public class CSDataType {
     }
     
     func getFrameSize() -> Int32 {
-        
         switch format {
         case .PixelBuffer:
             guard let pixelParams = pixelParams else {
                 return 0
             }
-            
-            return Int32(Float(pixelParams.width) * Float(pixelParams.height) * getPixelSizeFromColorSpace(colorSpace: pixelParams.colorSpace))
+            return Int32(Float(pixelParams.width) * Float(pixelParams.height) * getPixelSize())
         case .Undefine:
             return 0
         case .PCMData:
@@ -78,9 +82,6 @@ public class CSDataType {
         case .JsonData:
             return 0
         }
-        
-        
-        
     }
 }
 
@@ -164,6 +165,8 @@ public class CSSourceNodeImplement {
         }
         
         
+        
+        
         //Store data to cache
         CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
         
@@ -177,8 +180,8 @@ public class CSSourceNodeImplement {
         let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
         for row in 0..<height {
             let src = baseAddress!.advanced(by: row * bytesPerRow)
-            let dest = destinationPointer.advanced(by: row * width * 4)
-            memcpy(dest, src, width * 4)
+            let dest = destinationPointer.advanced(by: Int(Float(row) * Float(width) * dataType.getPixelSize()))
+            memcpy(dest, src, Int(Float(width) * dataType.getPixelSize()))
         }
         cs_data_cache_unlock_data_cache(nativePtr)
         

@@ -338,6 +338,7 @@ void* cs_data_processor_create(void) {
     CSProcessUnitNative *processor = NULL;
     // Alloc processor context
     processor = (CSProcessUnitNative*)calloc(1, sizeof(CSProcessUnitNative));
+    processor->header.cache._writeIndex = 1;
     if (!processor) return NULL;
     return processor;
 }
@@ -383,6 +384,16 @@ CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputI
     CSDataCacheNative* dataCache = (CSDataCacheNative*)dependentUnit;
     if(!dataCache) return NULL;
     
+    
+    if(dataCache->_readIndex == dataCache->_writeIndex){
+        if(dataCache->_writeIndex == 0){
+            dataCache->_readIndex = CACHE_BUFFER_MAX_SIZE - 1;
+        }else{
+            dataCache->_readIndex = dataCache->_writeIndex - 1;
+        }
+    }
+    
+    
     return dataCache->_cacheBuffer[dataCache->_readIndex];
 }
 
@@ -403,6 +414,7 @@ void cs_data_processor_register_onProcess_function(void* sourcePtr, PUProcessCal
 void* cs_data_source_create(void) {
     CSDataSourceNative *source = NULL;
     source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
+    source->header.cache._writeIndex = 1;
     if (!source) return NULL;
     
     return source;
@@ -458,17 +470,20 @@ void cs_data_header_binding(void *sourcePtr, const void* swiftObjPtr) {
 
 void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
-    cache->_cacheBuffer[0] = malloc(dataSize);
-    cache->_cacheBuffer[1] = malloc(dataSize);
+    
+    for (int i = 0; i < CACHE_BUFFER_MAX_SIZE; i++) {
+        CSDataWrapNative* dataWrap = calloc(1, sizeof(CSDataWrapNative));
+        dataWrap->dataSize = dataSize;
+        dataWrap->data = malloc(dataSize);
+        
+        cache->_cacheBuffer[i] = dataWrap;
+    }
 }
 
 CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     
-    if(cache->_readIndex == cache->_writeIndex) {
-        return cache->_cacheBuffer[cache->_writeIndex + 1];
-    }
-    
+
     return cache->_cacheBuffer[cache->_writeIndex];
     
 }

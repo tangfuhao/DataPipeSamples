@@ -31,6 +31,7 @@ class CameraSource : CSSourcePProtocol {
 
 extension CameraSource: CameraCapturePushDelegate {
     func myVideoCapture(_ capture: CameraCapture, didOutputSampleBuffer pixelBuffer: CVPixelBuffer, rotation: Int, timeStamp: CMTime) {
+        print("w:\(CVPixelBufferGetWidth(pixelBuffer)) ,h: \(CVPixelBufferGetHeight(pixelBuffer)) ")
         storePixelData(pixelBuffer: pixelBuffer)
     }
 }
