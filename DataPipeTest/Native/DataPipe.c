@@ -296,9 +296,6 @@ void cs_data_processor_connect_dep(void* processorPtr,void *depPtr) {
 }
 
 
-
-
-
 //TODO Read index is actively add 1
 CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputIndex) {
     CSProcessUnitNative *processor = (CSProcessUnitNative *)processorPtr;
@@ -309,6 +306,14 @@ CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputI
     if(!dataCache) return NULL;
     
     return dataCache->_cacheBuffer[dataCache->_readIndex];
+}
+
+void cs_data_processor_register_onProcess_function(void* sourcePtr, PUProcessCallBackPtr callBack) {
+    CSProcessUnitNative *processor = NULL;
+    processor = (CSProcessUnitNative*)sourcePtr;
+    if (!processor) return;
+    
+    processor->_onProcessFunc = callBack;
 }
 
 

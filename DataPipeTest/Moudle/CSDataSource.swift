@@ -23,6 +23,184 @@ protocol CSUnitBaseProtocol {
     func pushPixelData(pixelBuffer: CVPixelBuffer)
 }
 
+
+
+
+
+
+
+
+
+struct CSDataType {
+    var format: CSDataFormat
+}
+
+protocol CSNodeProtocol : AnyObject {
+    func onInit()
+    func onRelease()
+    func onRegisterDataType() -> CSDataType
+
+    func getMMMMMM() -> AnyObject
+}
+
+protocol CSNodeProcessorProtocol : CSNodeProtocol {
+    func onProcess()
+}
+
+//protocol CSNativeProtocol {
+//    func createNativePtr() -> UnsafeMutableRawPointer?
+//    func releaseNativePtr(ptr: UnsafeMutableRawPointer)
+//}
+
+
+
+//Source
+class CSNodeBase {
+    weak var delegate: CSNodeProtocol?
+    var nativePtr: UnsafeMutableRawPointer?
+    
+    init() {
+        print("CSUnitBase init")
+        let mySelf = getMMMMMM()
+        self.delegate = mySelf as? any CSNodeProtocol
+//        self.nativeDelegate = mySelf as? any CSNativeProtocol
+        
+        guard let nativePtr = createNativePtr() else {
+            return
+        }
+        self.nativePtr = nativePtr
+    }
+    
+    deinit {
+        print("CSUnitBase deinit")
+        guard let nativePtr = nativePtr else {
+            return
+        }
+        
+        releaseNativePtr(ptr: nativePtr)
+    }
+    
+    
+    func getMMMMMM() -> AnyObject {
+        return self
+    }
+    
+    func storePixelData(pixelBuffer: CVPixelBuffer) {
+        //Store data to cache
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+
+        // Create the pointer to the destination memory
+        let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_cache_lock_data_cache(nativePtr)
+        let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
+        for row in 0..<height {
+            let src = baseAddress!.advanced(by: row * bytesPerRow)
+            let dest = destinationPointer.advanced(by: row * width * 4)
+            memcpy(dest, src, width * 4)
+        }
+        cs_data_cache_unlock_data_cache(nativePtr)
+        
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+    }
+    
+    //Make nodes fixed
+    func makeRelationShip() {
+        
+        //register functions
+        let swiftObjectRef = UnsafeRawPointer(Unmanaged.passRetained(self).toOpaque())
+        cs_data_header_binding(nativePtr, swiftObjectRef);
+        
+        cs_data_source_register_onInit_function(nativePtr) { swiftObjectRef in
+            guard let pointer = swiftObjectRef else {
+                return
+            }
+
+            let unitWeakRef = Unmanaged<CSNodeBase>.fromOpaque(pointer).takeUnretainedValue()
+            guard let delegate = unitWeakRef.getMMMMMM() as? any CSNodeProtocol else {
+                return
+            }
+            delegate.onInit()
+        }
+        
+        cs_data_source_register_onRelease_function(nativePtr) { swiftObjectRef in
+            guard let pointer = swiftObjectRef else {
+                return
+            }
+
+            let unitWeakRef = Unmanaged<CSNodeBase>.fromOpaque(pointer).takeRetainedValue()
+            guard let delegate = unitWeakRef.getMMMMMM() as? any CSNodeProtocol else {
+                return
+            }
+            delegate.onRelease()
+        }
+    }
+    
+    func releaseNativePtr(ptr: UnsafeMutableRawPointer) {
+        cs_data_source_release(ptr)
+    }
+    
+    func createNativePtr() -> UnsafeMutableRawPointer? {
+        return cs_data_source_create()
+    }
+    
+}
+
+
+class CSProcessorNodeImplement : CSNodeBase {
+    override func releaseNativePtr(ptr: UnsafeMutableRawPointer) {
+        cs_data_processor_release(ptr)
+    }
+    
+    override func createNativePtr() -> UnsafeMutableRawPointer? {
+        return cs_data_processor_create()
+    }
+    
+    override func makeRelationShip() {
+        super.makeRelationShip()
+        cs_data_processor_register_onProcess_function(nativePtr) { swiftObjectRef in
+            guard let pointer = swiftObjectRef else {
+                return
+            }
+
+            let unitWeakRef = Unmanaged<CSNodeBase>.fromOpaque(pointer).takeUnretainedValue()
+            guard let delegate = unitWeakRef.getMMMMMM() as? any CSNodeProcessorProtocol else {
+                return
+            }
+            delegate.onProcess()
+        }
+
+    }
+}
+
+
+
+typealias CSSourcePProtocol = CSNodeBase & CSNodeProtocol
+
+
+
+class cameraSourceff : CSSourcePProtocol {
+    func onInit() {
+        
+    }
+    
+    func onRelease() {
+        
+    }
+    
+    func onRegisterDataType() -> CSDataType {
+        return CSDataType(format: .PixelBuffer)
+    }
+    
+}
+
+
+
+
+
 class CSUnitBase : CSUnitBaseProtocol{
     var nativePtr: UnsafeMutableRawPointer?
     var inputType: CSDataFormat = .Undefine

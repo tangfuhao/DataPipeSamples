@@ -16,30 +16,22 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         
-        //Create data pipe
-        let dataPipe = CSDataPipe()
-        self.dataPipe = dataPipe
-        
-        let dataSource = CameraSource()
-        let dataProcesser = YUV2RGBProcessor()
-        dataProcesser.connectInput(input: dataSource)
-        dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
-        
-        dataPipe.ReceiveData { pixelBuffer in
-            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
-        }
-        
-        
-        
+//        //Create data pipe
+//        let dataPipe = CSDataPipe()
+//        self.dataPipe = dataPipe
+//
+//        let dataSource = CameraSource()
+//        let dataProcesser = YUV2RGBProcessor()
+//        dataProcesser.connectInput(input: dataSource)
+//        dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
+//
+//        dataPipe.ReceiveData { pixelBuffer in
+//            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
+//        }
 //        dataPipe.PullPixelData()
         
         
-
-
-//        var dataProcesser2 = CSDataProcessor()
-//
-//        dataProcesser.addInput(source: dataSource,index: 0)
-//        dataProcesser2.addInput(source: dataSource, index: 0)
+        let asdasd = cameraSourceff()
         
     }
 

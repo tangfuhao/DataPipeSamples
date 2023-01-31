@@ -30,8 +30,8 @@
             filePath = "DataPipeTest/Native/DataPipe.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "321"
-            endingLineNumber = "321"
+            startingLineNumber = "326"
+            endingLineNumber = "326"
             landmarkName = "cs_data_source_create()"
             landmarkType = "9">
          </BreakpointContent>
@@ -46,9 +46,9 @@
             filePath = "DataPipeTest/Native/DataPipe.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "351"
-            endingLineNumber = "351"
-            landmarkName = "cs_data_source_register_onInit_function(sourcePtr, callBack)"
+            startingLineNumber = "356"
+            endingLineNumber = "356"
+            landmarkName = "cs_data_source_register_onRelease_function(sourcePtr, callBack)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
@@ -62,9 +62,9 @@
             filePath = "DataPipeTest/Native/DataPipe.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "359"
-            endingLineNumber = "359"
-            landmarkName = "cs_data_source_register_onRelease_function(sourcePtr, callBack)"
+            startingLineNumber = "364"
+            endingLineNumber = "364"
+            landmarkName = "cs_data_header_binding(sourcePtr, swiftObjPtr)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
