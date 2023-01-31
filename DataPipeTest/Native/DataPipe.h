@@ -22,9 +22,9 @@ typedef struct
 //Define data callback function
 typedef void (*PullCallBackPtr)(const char* id, CSDataWrapNative*);
 
-typedef void (*PUInitCallBackPtr)(void* swiftObjPtr);
-typedef void (*PUReleaseCallBackPtr)(void* swiftObjPtr);
-typedef void (*PUProcessCallBackPtr)(void);
+typedef void (*PUInitCallBackPtr)(const void* swiftObjPtr);
+typedef void (*PUReleaseCallBackPtr)(const void* swiftObjPtr);
+typedef void (*PUProcessCallBackPtr)(const void* swiftObjPtr);
 
 
 
@@ -58,6 +58,9 @@ typedef struct
     //Status sync
     #define CS_STATUS_INIT    (1 << 0)  // process uint inited
     int             _status;
+    
+    
+    const void*           _bindingSwiftObject;
 } CSDataHeaderNative;
 
 
@@ -119,6 +122,33 @@ typedef struct
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  ==============================================================
  Data Pipe
@@ -126,7 +156,7 @@ typedef struct
 
 
 //init
-void* cs_data_pipe_create(void);
+void* cs_data_pipe_create();
 void cs_data_pipe_release(void* dataPipePtr);
 
 
@@ -168,39 +198,11 @@ void cs_data_cache_unlock_data_cache(void *sourcePtr);
  Data Source
  */
 
-
-//enum VIDEOPARAM
-//{
-//    VIDEO_HEIGHT=1,
-//    VIDEO_WIDTH,
-//    COLOR_SPACES
-//} ;
-//
-//enum
-//{
-//    RGBA = 1,
-//    BGRA,
-//    NV21
-//
-//}ColorSpaces;
-//
-//
-//typedef struct
-//{
-//    enum VIDEOPARAM param;
-//    int value;
-//
-//} CSVideoParam;
-
-
-
-
-
 void* cs_data_source_create(void);
-void cs_data_source_release(void* sourcePtr);
+void cs_data_source_release(void *sourcePtr);
 
 
-
+void cs_data_header_binding(void* sourcePtr, const void* swiftObjPtr);
 void cs_data_source_register_onInit_function(void* sourcePtr, PUInitCallBackPtr callBack);
 void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBackPtr callBack);
 
@@ -224,6 +226,7 @@ void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBa
 //Create and release
 void* cs_data_processor_create(void);
 void cs_data_processor_release(void* processorPtr);
+
 
 //Connect
 void cs_data_processor_connect_dep(void* processorPtr,void* depPtr);

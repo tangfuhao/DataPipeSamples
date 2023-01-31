@@ -87,6 +87,28 @@ static void* cs_data_pipe_thread_proc(void *param)
 
 
 
+void cs_operate_release(CSDataHeaderNative* node) {
+    if(node->context_type == CS_TYPE_PROCESSOR){
+        CSProcessUnitNative* processor = (CSProcessUnitNative*)node;
+        cs_data_pipe_iterate_topology_node(processor,cs_operate_release);
+        cs_data_processor_release_internal(processor);
+    }else{
+        CSDataSourceNative* source = (CSDataSourceNative*)node;
+        cs_data_source_release_internal(source);
+    }
+}
+
+void cs_data_pipe_iterate_topology_node(CSProcessUnitNative* node, void (*operateFunc)(CSDataHeaderNative* node)) {
+    for (int i = 0; i < node->_dependentUnitCount; i++) {
+        CSDataHeaderNative* dataHeader = node->_dependentInputPtr[i];
+        operateFunc(dataHeader);
+    }
+}
+
+
+
+
+
 ///Public
 
 void* cs_data_pipe_create(void) {
@@ -105,12 +127,18 @@ void* cs_data_pipe_create(void) {
     return dataPipe;
 }
 
+
+
 void cs_data_pipe_release(void* dataPipePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
     if(!dataPipe) return;
-    
+    cs_data_pipe_iterate_topology_node(dataPipe->_outPutNode,cs_operate_release);
     free(dataPipe);
 }
+
+
+
+
 
 
 void cs_data_pipe_pause(void* dataPipePtr) {
@@ -157,7 +185,7 @@ void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback) 
 
 void cs_processor_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     if(unit->_onProcessFunc != NULL){
-        unit->_onProcessFunc();
+        unit->_onProcessFunc(unit->header._bindingSwiftObject);
     }
 }
 
@@ -199,6 +227,7 @@ void cs_processor_init_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative
     for (int i = 0; i < unit->_dependentUnitCount; i++) {
         CSDataHeaderNative* dataHeader = unit->_dependentInputPtr[i];
         
+        
         //5.Processor continue loading dependencies
         if(dataHeader->context_type == CS_TYPE_PROCESSOR){
             CSProcessUnitNative* childUnit = (CSProcessUnitNative*)dataHeader;
@@ -229,6 +258,12 @@ void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit)
 
 
 
+void cs_data_processor_release_internal(CSProcessUnitNative* processor) {
+    if(!processor) return;
+    if(processor->header._onReleaseFunc){
+        processor->header._onReleaseFunc(processor->header._bindingSwiftObject);
+    }
+}
 
 //Public
 void* cs_data_processor_create(void) {
@@ -239,13 +274,12 @@ void* cs_data_processor_create(void) {
     return processor;
 }
 
-
-void cs_data_processor_release(void* processorPtr) {
-    CSDataPipeNative *processor = (CSDataPipeNative *)processorPtr;
+void cs_data_processor_release(void* processorPtr){
+    CSProcessUnitNative *processor = (CSProcessUnitNative *)processorPtr;
     if(!processor) return;
-    
     free(processor);
 }
+
 
 
 
@@ -287,32 +321,50 @@ void* cs_data_source_create(void) {
     CSDataSourceNative *source = NULL;
     source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
     if (!source) return NULL;
+    
     return source;
 }
 
-void cs_data_source_release(void *sourcePtr) {
+void cs_data_source_release(void *sourcePtr){
     CSDataSourceNative *source = NULL;
-    source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
+    source = (CSDataSourceNative*)sourcePtr;
     if (!source) return;
-    
     free(source);
 }
 
 
-void cs_data_source_register_onInit_function(void* sourcePtr, PUInitCallBackPtr callBack) {
-    CSDataHeaderNative *source = NULL;
-    source = (CSDataHeaderNative*)calloc(1, sizeof(CSDataHeaderNative));
+
+void cs_data_source_release_internal(CSDataSourceNative *source) {
     if (!source) return;
     
-    source->_onIntFunc = callBack;
+    if(source->header._onReleaseFunc){
+        source->header._onReleaseFunc(source->header._bindingSwiftObject);
+    }
+}
+
+
+void cs_data_source_register_onInit_function(void* sourcePtr, PUInitCallBackPtr callBack) {
+    CSDataSourceNative *source = NULL;
+    source = (CSDataSourceNative*)sourcePtr;
+    if (!source) return;
+    
+    source->header._onIntFunc = callBack;
 }
 
 void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBackPtr callBack) {
-    CSDataHeaderNative *source = NULL;
-    source = (CSDataHeaderNative*)calloc(1, sizeof(CSDataHeaderNative));
+    CSDataSourceNative *source = NULL;
+    source = (CSDataSourceNative*)sourcePtr;
     if (!source) return;
     
-    source->_onReleaseFunc = callBack;
+    source->header._onReleaseFunc = callBack;
+}
+
+void cs_data_header_binding(void *sourcePtr, const void* swiftObjPtr) {
+    CSDataSourceNative *source = NULL;
+    source = (CSDataSourceNative*)sourcePtr;
+    if (!source) return;
+    
+    source->header._bindingSwiftObject = swiftObjPtr;
 }
 
 

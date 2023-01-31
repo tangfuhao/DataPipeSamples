@@ -20,7 +20,6 @@ protocol CSProcessorProtocol {
 
 
 class CSDataProcessor : CSDataSource, CSProcessorProtocol {
-    var dependentUnits = [CSUnitBase]()
     
     override func onInit() {
         nativePtr = cs_data_processor_create()
@@ -46,7 +45,6 @@ class CSDataProcessor : CSDataSource, CSProcessorProtocol {
     }
     
     func connectInput(input: CSDataSource) {
-        dependentUnits.append(input)
         cs_data_processor_connect_dep(nativePtr,input.nativePtr)
     }
     

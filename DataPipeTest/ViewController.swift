@@ -29,7 +29,9 @@ class ViewController: UIViewController {
             print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
         }
         
-        dataPipe.PullPixelData()
+        
+        
+//        dataPipe.PullPixelData()
         
         
 
