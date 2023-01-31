@@ -12,7 +12,7 @@ import Foundation
 import UIKit
 import AVFoundation
 
-protocol CameraCapturePushDelegate {
+protocol CameraCapturePushDelegate : AnyObject {
     func myVideoCapture(_ capture: CameraCapture, didOutputSampleBuffer pixelBuffer: CVPixelBuffer, rotation: Int, timeStamp: CMTime)
 }
 
@@ -34,7 +34,7 @@ enum Camera: Int {
 
 class CameraCapture: NSObject {
     
-    fileprivate var delegate: CameraCapturePushDelegate?
+    fileprivate weak var delegate: CameraCapturePushDelegate?
     
     private var currentCamera = Camera.defaultCamera()
     private let captureSession: AVCaptureSession

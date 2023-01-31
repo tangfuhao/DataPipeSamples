@@ -28,14 +28,9 @@ class CSDataPipe {
         cs_data_pipe_release(nativePtr)
     }
     
-    
-    
-    var mainSource: CSSourceNodeImplement?
-    var mainOutput: CSSourceNodeImplement?
-    
     func setMainInputAndOutput(input: CSSourceNodeImplement, output: CSSourceNodeImplement) {
-        mainSource = input
-        mainOutput = output
+        cs_data_pipe_set_main_source(nativePtr, input.nativePtr)
+        cs_data_pipe_set_output_node(nativePtr, output.nativePtr)
     }
     
 

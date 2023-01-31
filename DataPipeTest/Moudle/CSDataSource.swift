@@ -39,7 +39,6 @@ public class CSSourceNodeImplement {
     var nativePtr: UnsafeMutableRawPointer?
     
     init() {
-        print("CSUnitBase init")
         guard let nativePtr = createNativePtr() else {
             return
         }
@@ -67,7 +66,6 @@ public class CSSourceNodeImplement {
     }
     
     deinit {
-        print("CSUnitBase deinit")
         guard let nativePtr = nativePtr else {
             return
         }

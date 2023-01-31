@@ -11,6 +11,15 @@ import CoreVideo
 class YUV2RGBProcessor : CSProcessorPProtocol {
     var rgbPixelBufferTemp: CVPixelBuffer?
     
+    override init() {
+        super.init()
+        print("YUV2RGBProcessor init")
+    }
+    
+    deinit {
+        print("YUV2RGBProcessor deinit")
+    }
+    
     func onProcess() {
         guard let pixelBuffer = getInputPixel(index: 0),
               let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: pixelBuffer) else {

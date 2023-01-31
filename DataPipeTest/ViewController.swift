@@ -29,17 +29,17 @@ class ViewController: UIViewController {
         
         
         //Create data pipe
-//        let dataPipe = CSDataPipe()
-//        self.dataPipe = dataPipe
-//
-//        let dataSource = CameraSource()
-//        let dataProcesser = YUV2RGBProcessor()
-//        dataProcesser.connectInput(input: dataSource)
-//        dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
-//
-//        dataPipe.ReceiveData { pixelBuffer in
-//            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
-//        }
+        let dataPipe = CSDataPipe()
+        self.dataPipe = dataPipe
+
+        let dataSource = CameraSource()
+        let dataProcesser = YUV2RGBProcessor()
+        dataProcesser.connectInput(input: dataSource)
+        dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
+
+        dataPipe.ReceiveData { pixelBuffer in
+            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
+        }
 //        dataPipe.PullPixelData()
 
     }
@@ -48,13 +48,15 @@ class ViewController: UIViewController {
     @objc func handleDisplayLink() {
         progress += 1
         
-        
-        if progress % 60 == 40 {
-            progress = 0
-            tempDataPipes.removeFirst()
-        }else if progress % 60 == 10 {
-            tempDataPipes.append(CSDataPipe())
+        if(progress == 1000){
+            dataPipe = nil
         }
+//        if progress % 60 == 40 {
+//            progress = 0
+//            tempDataPipes.removeFirst()
+//        }else if progress % 60 == 10 {
+//            tempDataPipes.append(CSDataPipe())
+//        }
         
 
     }

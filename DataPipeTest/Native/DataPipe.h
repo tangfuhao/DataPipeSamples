@@ -156,13 +156,17 @@ typedef struct
 
 
 //init
-void* cs_data_pipe_create();
+void* cs_data_pipe_create(void);
 void cs_data_pipe_release(void* dataPipePtr);
 
 
 //contorl
 void cs_data_pipe_pause(void* dataPipePtr);
 void cs_data_pipe_resume(void* dataPipePtr);
+
+
+void cs_data_pipe_set_main_source(void* dataPipePtr,void* sourcePtr);
+void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr);
 
 
 // Receiver data from data pipe

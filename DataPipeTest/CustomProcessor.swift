@@ -23,4 +23,6 @@ class CustomProcessor : CSProcessorPProtocol {
     func onRegisterDataType() -> CSDataType {
         return CSDataType(format: .PixelBuffer)
     }
+    
+    
 }

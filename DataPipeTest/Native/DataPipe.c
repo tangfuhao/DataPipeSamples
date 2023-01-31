@@ -8,6 +8,7 @@
 #include "DataPipe.h"
 #include "DataPipe_Internal.h"
 #include <stdlib.h>
+#include <string.h>
 
 
 //////////////////////////////////////////////////////////////////
@@ -30,7 +31,11 @@ int cs_data_pipe_wait_running(CSDataPipeNative *dataPipe) {
     }
     pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
 
-    result = dataPipe->_status & CS_DP_STATUS_RUNNING;
+    if(dataPipe->_status & CS_DP_STATUS_CLOSE){
+        return 0;
+    }else{
+        return dataPipe->_status & CS_DP_STATUS_RUNNING;
+    }
     return result;
 }
 
@@ -45,8 +50,13 @@ int cs_data_pipe_wari_vsync_frequency(CSDataPipeNative *dataPipe) {
     }
     pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
     
-    result = dataPipe->_status & CS_DP_STATUS_VSYNC;
-    return result;
+    
+    if(dataPipe->_status & CS_DP_STATUS_CLOSE){
+        return 0;
+    }else{
+        return dataPipe->_status & CS_DP_STATUS_VSYNC;
+    }
+    
 }
 
 
@@ -120,6 +130,15 @@ void cs_data_pipe_iterate_topology_node(CSProcessUnitNative* node, void (*operat
 }
 
 
+void cs_data_pipe_stop(CSDataPipeNative *dataPipe) {
+    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    dataPipe->_status |= CS_DP_STATUS_CLOSE;
+    pthread_cond_signal(&(dataPipe->_status_sync_cond));
+    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
+    
+    pthread_join(dataPipe->process_thread, NULL);
+}
+
 
 
 
@@ -143,15 +162,6 @@ void* cs_data_pipe_create(void) {
 
 
 
-void cs_data_pipe_stop(CSDataPipeNative *dataPipe) {
-    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
-    dataPipe->_status |= CS_DP_STATUS_CLOSE;
-    pthread_cond_signal(&(dataPipe->_status_sync_cond));
-    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
-    
-    pthread_join(dataPipe->process_thread, NULL);
-}
-
 
 void cs_data_pipe_release(void* dataPipePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
@@ -161,11 +171,34 @@ void cs_data_pipe_release(void* dataPipePtr) {
     cs_data_pipe_stop(dataPipe);
     
     cs_data_pipe_iterate_topology_node(dataPipe->_outPutNode,cs_operate_release);
+    cs_data_processor_release_internal(dataPipe->_outPutNode);
     free(dataPipe);
 }
 
 
+void cs_data_pipe_set_main_source(void* dataPipePtr,void* sourcePtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    
+    CSDataHeaderNative *source = (CSDataHeaderNative *)sourcePtr;
+    if(!source) return;
+    
+    
+    cs_header_process_init(dataPipe,source);
+    
+}
 
+void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    
+    
+    CSDataHeaderNative *source = (CSDataHeaderNative *)processorPtr;
+    if(!source) return;
+    
+    dataPipe->_outPutNode = processorPtr;
+    cs_header_process_init(dataPipe,source);
+}
 
 
 
@@ -202,7 +235,14 @@ void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback) 
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
     if(!dataPipe) return;
     
-    dataPipe->_callback = callback;
+    if(callback){
+        dataPipe->_callback = callback;
+        cs_data_pipe_resume(dataPipe);
+    }else{
+        cs_data_pipe_pause(dataPipe);
+    }
+    
+    
 }
 
 //////////////////////////////////////////////////////////////////
@@ -237,7 +277,7 @@ void cs_processor_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNat
 //8. Load Init Function
 void cs_header_process_init(CSDataPipeNative *dataPipe, CSDataHeaderNative* header) {
     if (header->_onIntFunc != NULL) {
-        header->_onIntFunc(NULL);
+        header->_onIntFunc(header->_bindingSwiftObject);
     }
     header->_status = header->_status | CS_STATUS_INIT;
 }
@@ -319,6 +359,16 @@ void cs_data_processor_connect_dep(void* processorPtr,void *depPtr) {
     if(!dependentUnit) return;
     
     
+    if(processor->_dependentInputPtr == NULL) {
+        processor->_dependentInputPtr = malloc(sizeof(void*) * (processor->_dependentUnitCount + 1));
+    }else{
+        void* tempZone = malloc(sizeof(void*) * processor->_dependentUnitCount);
+        void* srcPtr = processor->_dependentInputPtr;
+        int copySize = sizeof(void*) * processor->_dependentUnitCount;
+        memcpy(tempZone, srcPtr, copySize);
+        processor->_dependentInputPtr = tempZone;
+        free(srcPtr);
+    }
     processor->_dependentInputPtr[processor->_dependentUnitCount] = dependentUnit;
     processor->_dependentUnitCount += 1;
 }

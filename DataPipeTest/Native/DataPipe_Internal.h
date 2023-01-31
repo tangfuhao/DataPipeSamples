@@ -17,7 +17,7 @@
 
 
 void cs_data_pipe_release_all_unit(CSDataPipeNative* dataPipe);
-
+void cs_data_pipe_stop(CSDataPipeNative *dataPipe);
 
 void cs_header_process_init(CSDataPipeNative *dataPipe, CSDataHeaderNative* header);
 
