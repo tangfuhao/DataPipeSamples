@@ -40,29 +40,23 @@ protocol CSNodeProtocol : AnyObject {
     func onRelease()
     func onRegisterDataType() -> CSDataType
 
-    func getMMMMMM() -> AnyObject
 }
 
 protocol CSNodeProcessorProtocol : CSNodeProtocol {
     func onProcess()
 }
 
-//protocol CSNativeProtocol {
-//    func createNativePtr() -> UnsafeMutableRawPointer?
-//    func releaseNativePtr(ptr: UnsafeMutableRawPointer)
-//}
-
 
 
 //Source
-class CSNodeBase {
-    weak var delegate: CSNodeProtocol?
+class CSSourceNodeImplement {
+//    weak var delegate: CSNodeProtocol?
     var nativePtr: UnsafeMutableRawPointer?
     
     init() {
         print("CSUnitBase init")
-        let mySelf = getMMMMMM()
-        self.delegate = mySelf as? any CSNodeProtocol
+//        let mySelf = getMMMMMM()
+//        self.delegate = mySelf as? any CSNodeProtocol
 //        self.nativeDelegate = mySelf as? any CSNativeProtocol
         
         guard let nativePtr = createNativePtr() else {
@@ -81,9 +75,6 @@ class CSNodeBase {
     }
     
     
-    func getMMMMMM() -> AnyObject {
-        return self
-    }
     
     func storePixelData(pixelBuffer: CVPixelBuffer) {
         //Store data to cache
@@ -119,8 +110,8 @@ class CSNodeBase {
                 return
             }
 
-            let unitWeakRef = Unmanaged<CSNodeBase>.fromOpaque(pointer).takeUnretainedValue()
-            guard let delegate = unitWeakRef.getMMMMMM() as? any CSNodeProtocol else {
+            let unitWeakRef = Unmanaged<CSSourceNodeImplement>.fromOpaque(pointer).takeUnretainedValue()
+            guard let delegate = unitWeakRef as? any CSNodeProtocol else {
                 return
             }
             delegate.onInit()
@@ -131,8 +122,8 @@ class CSNodeBase {
                 return
             }
 
-            let unitWeakRef = Unmanaged<CSNodeBase>.fromOpaque(pointer).takeRetainedValue()
-            guard let delegate = unitWeakRef.getMMMMMM() as? any CSNodeProtocol else {
+            let unitWeakRef = Unmanaged<CSSourceNodeImplement>.fromOpaque(pointer).takeRetainedValue()
+            guard let delegate = unitWeakRef as? any CSNodeProtocol else {
                 return
             }
             delegate.onRelease()
@@ -150,7 +141,7 @@ class CSNodeBase {
 }
 
 
-class CSProcessorNodeImplement : CSNodeBase {
+class CSProcessorNodeImplement : CSSourceNodeImplement {
     override func releaseNativePtr(ptr: UnsafeMutableRawPointer) {
         cs_data_processor_release(ptr)
     }
@@ -166,8 +157,8 @@ class CSProcessorNodeImplement : CSNodeBase {
                 return
             }
 
-            let unitWeakRef = Unmanaged<CSNodeBase>.fromOpaque(pointer).takeUnretainedValue()
-            guard let delegate = unitWeakRef.getMMMMMM() as? any CSNodeProcessorProtocol else {
+            let unitWeakRef = Unmanaged<CSSourceNodeImplement>.fromOpaque(pointer).takeUnretainedValue()
+            guard let delegate = unitWeakRef as? any CSNodeProcessorProtocol else {
                 return
             }
             delegate.onProcess()
@@ -178,7 +169,7 @@ class CSProcessorNodeImplement : CSNodeBase {
 
 
 
-typealias CSSourcePProtocol = CSNodeBase & CSNodeProtocol
+typealias CSSourcePProtocol = CSSourceNodeImplement & CSNodeProtocol
 
 
 
