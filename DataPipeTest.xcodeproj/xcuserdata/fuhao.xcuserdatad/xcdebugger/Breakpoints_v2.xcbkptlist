@@ -30,8 +30,8 @@
             filePath = "DataPipeTest/CameraSource.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "45"
-            endingLineNumber = "45"
+            startingLineNumber = "34"
+            endingLineNumber = "34"
             landmarkName = "myVideoCapture(_:didOutputSampleBuffer:rotation:timeStamp:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -222,9 +222,25 @@
             filePath = "DataPipeTest/CameraSource.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "33"
-            endingLineNumber = "33"
+            startingLineNumber = "22"
+            endingLineNumber = "22"
             landmarkName = "onRelease()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0540E583-46FB-4EA1-BB28-262234A60045"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "DataPipeTest/Moudle/CSDataSource.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "146"
+            endingLineNumber = "146"
+            landmarkName = "handleInit()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

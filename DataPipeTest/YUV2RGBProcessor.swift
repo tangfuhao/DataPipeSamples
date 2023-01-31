@@ -38,7 +38,7 @@ class YUV2RGBProcessor : CSProcessorPProtocol {
     }
     
     func onRegisterDataType() -> CSDataType {
-        return CSDataType(format: .PixelBuffer)
+        return CSDataType(format: .PixelBuffer, pixelParams: CSPixelParams(width: 640, height: 480, colorSpace: .BGRA32))
     }
     
     

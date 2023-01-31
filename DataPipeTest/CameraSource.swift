@@ -13,17 +13,6 @@ import CoreMedia
 class CameraSource : CSSourcePProtocol {
     var cameraCapture: CameraCapture?
     
-    override init() {
-        super.init()
-        print("CameraSource init")
-    }
-    
-    deinit{
-        print("CameraSource deinit")
-    }
-    
-    
-    
     func onInit() {
         cameraCapture = CameraCapture(delegate: self)
         cameraCapture?.startCapture(ofCamera: .front)
@@ -35,7 +24,7 @@ class CameraSource : CSSourcePProtocol {
     }
     
     func onRegisterDataType() -> CSDataType {
-        return CSDataType(format: .PixelBuffer)
+        return CSDataType(format: .PixelBuffer,pixelParams: CSPixelParams(width: 640, height: 480, colorSpace: .NV21))
     }
 
 }

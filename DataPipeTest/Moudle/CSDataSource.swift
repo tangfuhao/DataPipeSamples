@@ -16,9 +16,74 @@ enum CSDataFormat {
     case JsonData
 }
 
-public struct CSDataType {
-    var format: CSDataFormat
+enum CSColorSpace {
+    case RGBA32
+    case BGRA32
+    case NV21
 }
+
+struct CSPixelParams {
+    var width: UInt
+    var height: UInt
+    var colorSpace: CSColorSpace
+}
+
+struct CSPcmParams {
+    var width: UInt
+    var height: UInt
+    var colorSpace: CSColorSpace
+}
+
+
+public class CSDataType {
+    let format: CSDataFormat
+    var pixelParams: CSPixelParams?
+    var pcmParams: CSPcmParams?
+    
+    init(format: CSDataFormat, pixelParams: CSPixelParams) {
+        self.format = format
+    }
+    
+    init(format: CSDataFormat, pcmParams: CSPcmParams) {
+        self.format = format
+    }
+    
+    
+    //TODO need fix bugs
+    func getPixelSizeFromColorSpace(colorSpace: CSColorSpace) -> Float{
+        switch colorSpace {
+        case .NV21:
+            return 1.5
+        case .BGRA32: break
+        case .RGBA32:
+            return 4
+        }
+        
+        return 1.5
+    }
+    
+    func getFrameSize() -> Int32 {
+        
+        switch format {
+        case .PixelBuffer:
+            guard let pixelParams = pixelParams else {
+                return 0
+            }
+            
+            return Int32(Float(pixelParams.width) * Float(pixelParams.height) * getPixelSizeFromColorSpace(colorSpace: pixelParams.colorSpace))
+        case .Undefine:
+            return 0
+        case .PCMData:
+            return 0
+        case .JsonData:
+            return 0
+        }
+        
+        
+        
+    }
+}
+
 
 
 public typealias CSSourcePProtocol = CSSourceNodeImplement & CSNodeProtocol
@@ -34,7 +99,7 @@ public protocol CSNodeProtocol : AnyObject {
 
 //Source
 public class CSSourceNodeImplement {
-    var inputType: CSDataFormat = .Undefine
+    var dataType: CSDataType?
     var isDetermineCacheSize = false
     var nativePtr: UnsafeMutableRawPointer?
     
@@ -54,13 +119,10 @@ public class CSSourceNodeImplement {
             }
 
             let unitWeakRef = Unmanaged<CSSourceNodeImplement>.fromOpaque(pointer).takeUnretainedValue()
-            unitWeakRef.makeRelationShip()
+            unitWeakRef.handleInit()
             
             
-            guard let delegate = unitWeakRef as? any CSNodeProtocol else {
-                return
-            }
-            delegate.onInit()
+
         }
         
     }
@@ -75,10 +137,32 @@ public class CSSourceNodeImplement {
     
     
     
+    
+    func handleInit() {
+        guard let nodeProtocol = self as? any CSNodeProtocol else {
+            fatalError("Conver data type error")
+        }
+        
+        let dataType = nodeProtocol.onRegisterDataType()
+        self.dataType = dataType
+        
+        
+        
+        let dataSize = dataType.getFrameSize()
+        
+        cs_data_cache_create_data_cache(nativePtr, dataSize)
+        makeRelationShip()
+        nodeProtocol.onInit()
+    }
+    
+    
+    
     func storePixelData(pixelBuffer: CVPixelBuffer) {
-        if inputType != .PixelBuffer {
+        guard let dataType = dataType,
+              dataType.format == .PixelBuffer else {
             fatalError("InputType is wrong")
         }
+        
         
         //Store data to cache
         CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
