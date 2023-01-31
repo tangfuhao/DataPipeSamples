@@ -33,14 +33,12 @@ class CSDataPipe {
     
     
     
-    var mainSource: CSDataSource?
-    var mainOutput: CSDataProcessor?
+    var mainSource: CSSourceNodeImplement?
+    var mainOutput: CSSourceNodeImplement?
     
-    func setMainInputAndOutput(input: CSDataSource, output: CSDataProcessor) {
+    func setMainInputAndOutput(input: CSSourceNodeImplement, output: CSSourceNodeImplement) {
         mainSource = input
         mainOutput = output
-        
-        
     }
     
 

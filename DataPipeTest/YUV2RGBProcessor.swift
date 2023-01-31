@@ -8,25 +8,30 @@
 import Foundation
 import CoreVideo
 
-class YUV2RGBProcessor : CSDataProcessor {
+class YUV2RGBProcessor : CSProcessorPProtocol {
     var rgbPixelBufferTemp: CVPixelBuffer?
     
-    
-    override func onInit() {
-        super.onInit()
-        registerInputDataFormat(index: 0, type: .PixelBuffer)
-    }
-    
-    override func onProcess() {
-        super.onProcess()
-        
+    func onProcess() {
         guard let pixelBuffer = getInputPixel(index: 0),
               let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
             return
         }
         
-        pushPixelData(pixelBuffer: rgbPixelBuffer)
+        storePixelData(pixelBuffer: rgbPixelBuffer)
     }
+    
+    func onInit() {
+        
+    }
+    
+    func onRelease() {
+        
+    }
+    
+    func onRegisterDataType() -> CSDataType {
+        return CSDataType(format: .PixelBuffer)
+    }
+    
     
     func getRGBPixelBuffer(yuvPixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
         if (rgbPixelBufferTemp ==  nil){
@@ -48,3 +53,4 @@ class YUV2RGBProcessor : CSDataProcessor {
 
     }
 }
+

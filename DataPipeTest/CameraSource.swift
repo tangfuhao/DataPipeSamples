@@ -10,21 +10,25 @@ import CoreVideo
 import CoreMedia
 
 
-class CameraSource : CSDataSource {
+class CameraSource : CSSourcePProtocol {
     var cameraCapture: CameraCapture?
-    
-    override func onInit() {
-        super.onInit()
-        
-        registerInputDataFormat(index: 0, type: .PixelBuffer)
-        
+    func onInit() {
         cameraCapture = CameraCapture(delegate: self)
         cameraCapture?.startCapture(ofCamera: .front)
     }
+    
+    func onRelease() {
+        
+    }
+    
+    func onRegisterDataType() -> CSDataType {
+        return CSDataType(format: .PixelBuffer)
+    }
+
 }
 
 extension CameraSource: CameraCapturePushDelegate {
     func myVideoCapture(_ capture: CameraCapture, didOutputSampleBuffer pixelBuffer: CVPixelBuffer, rotation: Int, timeStamp: CMTime) {
-        pushPixelData(pixelBuffer: pixelBuffer)
+        storePixelData(pixelBuffer: pixelBuffer)
     }
 }

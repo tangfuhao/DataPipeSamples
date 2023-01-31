@@ -8,11 +8,20 @@
 import Foundation
 
 
-
-class CustomProcessor : CSDataProcessor {
-    override func onInit() {
-        super.onInit()
-        //Register #1 input data
-        registerInputDataFormat(index: 0, type: .PixelBuffer)
+class CustomProcessor : CSProcessorPProtocol {
+    func onProcess() {
+        
+    }
+    
+    func onInit() {
+        
+    }
+    
+    func onRelease() {
+        
+    }
+    
+    func onRegisterDataType() -> CSDataType {
+        return CSDataType(format: .PixelBuffer)
     }
 }

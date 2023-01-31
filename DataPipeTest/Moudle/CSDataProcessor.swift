@@ -8,49 +8,57 @@
 import Foundation
 import CoreVideo
 
-
-protocol CSProcessorProtocol {
+public protocol CSNodeProcessorProtocol : CSNodeProtocol {
     func onProcess()
-    
-    func getInputPixel(index: Int) -> CVPixelBuffer?
-    
-    func connectInput(input: CSDataSource)
 }
 
+public typealias CSProcessorPProtocol = CSProcessorNodeImplement & CSNodeProcessorProtocol
 
 
-class CSDataProcessor : CSDataSource, CSProcessorProtocol {
-    
-    override func onInit() {
-        nativePtr = cs_data_processor_create()
+public class CSProcessorNodeImplement : CSSourceNodeImplement {
+    override func releaseNativePtr(ptr: UnsafeMutableRawPointer) {
+        cs_data_processor_release(ptr)
     }
     
-    func onProcess() {}
-
+    override func createNativePtr() -> UnsafeMutableRawPointer? {
+        return cs_data_processor_create()
+    }
     
-    func getInputPixel(index: Int)  -> CVPixelBuffer? {
+    override func makeRelationShip() {
+        super.makeRelationShip()
+        cs_data_processor_register_onProcess_function(nativePtr) { swiftObjectRef in
+            guard let pointer = swiftObjectRef else {
+                return
+            }
+
+            let unitWeakRef = Unmanaged<CSSourceNodeImplement>.fromOpaque(pointer).takeUnretainedValue()
+            guard let delegate = unitWeakRef as? any CSNodeProcessorProtocol else {
+                return
+            }
+            delegate.onProcess()
+        }
+    }
+    
+    
+    func getInputPixel(index: Int) -> CVPixelBuffer? {
         let width = 640
         let height = 480
         let bytesPerRow = width * 4
-        
+
         guard let dataCachePointer = cs_data_processor_get_input_data(nativePtr, Int32(index)) else {
             return nil
         }
-        
+
         let pixelData = dataCachePointer.pointee.data!
         var pixelBuffer: CVPixelBuffer?
         CVPixelBufferCreateWithBytes(nil, width, height, kCVPixelFormatType_32BGRA, pixelData, bytesPerRow, nil, nil, nil, &pixelBuffer)
-        
+
         return pixelBuffer
     }
     
-    func connectInput(input: CSDataSource) {
+    func connectInput(input: CSSourceNodeImplement) {
         cs_data_processor_connect_dep(nativePtr,input.nativePtr)
     }
-    
-
-    
-
-    
-    
 }
+
+
