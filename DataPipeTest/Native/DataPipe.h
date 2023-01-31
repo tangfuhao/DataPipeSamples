@@ -111,7 +111,7 @@ typedef struct
     
     pthread_mutex_t _status_sync_mutex;
     pthread_cond_t  _status_sync_cond;
-    pthread_cond_t  _params_sync_cond;
+//    pthread_cond_t  _params_sync_cond;
     
     
     CSProcessUnitNative*  _outPutNode;

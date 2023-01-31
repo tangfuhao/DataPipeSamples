@@ -14,17 +14,23 @@
 ///Data Processor
 ///
 
+static int InstanceCount = 0;
+
 
 ///Internal
 int cs_data_pipe_wait_running(CSDataPipeNative *dataPipe) {
     //Wait type determines
-    int result = 0;
+    int result = dataPipe->_status & CS_DP_STATUS_RUNNING;
+    if (result) return result;
     
-    while ( !(result = dataPipe->_status & CS_DP_STATUS_RUNNING) ) {
-        pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    
+    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    if (!(dataPipe->_status & CS_DP_STATUS_RUNNING)){
         pthread_cond_wait(&(dataPipe->_status_sync_cond), &(dataPipe->_status_sync_mutex));
-        pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
     }
+    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
+
+    result = dataPipe->_status & CS_DP_STATUS_RUNNING;
     return result;
 }
 
@@ -65,6 +71,8 @@ void cs_data_pipe_process(CSDataPipeNative *dataPipe) {
 static void* cs_data_pipe_thread_proc(void *param)
 {
     CSDataPipeNative *dataPipe = (CSDataPipeNative*)param;
+    printf("thread open \n");
+    InstanceCount++;
 
     // #1 Whether is over for each round
     while (!(dataPipe->_status & CS_DP_STATUS_CLOSE)) {
@@ -82,6 +90,10 @@ static void* cs_data_pipe_thread_proc(void *param)
         
         cs_data_pipe_process(dataPipe);
     }
+    
+    InstanceCount--;
+    
+    printf("thread close \n");
     return NULL;
 }
 
@@ -99,6 +111,8 @@ void cs_operate_release(CSDataHeaderNative* node) {
 }
 
 void cs_data_pipe_iterate_topology_node(CSProcessUnitNative* node, void (*operateFunc)(CSDataHeaderNative* node)) {
+    if(!node) return;
+    
     for (int i = 0; i < node->_dependentUnitCount; i++) {
         CSDataHeaderNative* dataHeader = node->_dependentInputPtr[i];
         operateFunc(dataHeader);
@@ -120,7 +134,7 @@ void* cs_data_pipe_create(void) {
     //Init
     pthread_mutex_init(&dataPipe->_status_sync_mutex, NULL);
     pthread_cond_init(&dataPipe->_status_sync_cond, NULL);
-    pthread_cond_init(&dataPipe->_params_sync_cond, NULL);
+//    pthread_cond_init(&dataPipe->_params_sync_cond, NULL);
     pthread_create(&dataPipe->process_thread, NULL, cs_data_pipe_thread_proc, dataPipe);
     
     
@@ -129,9 +143,23 @@ void* cs_data_pipe_create(void) {
 
 
 
+void cs_data_pipe_stop(CSDataPipeNative *dataPipe) {
+    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    dataPipe->_status |= CS_DP_STATUS_CLOSE;
+    pthread_cond_signal(&(dataPipe->_status_sync_cond));
+    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
+    
+    pthread_join(dataPipe->process_thread, NULL);
+}
+
+
 void cs_data_pipe_release(void* dataPipePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
     if(!dataPipe) return;
+    
+    
+    cs_data_pipe_stop(dataPipe);
+    
     cs_data_pipe_iterate_topology_node(dataPipe->_outPutNode,cs_operate_release);
     free(dataPipe);
 }

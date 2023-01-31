@@ -60,5 +60,3 @@ public class CSProcessorNodeImplement : CSSourceNodeImplement {
         cs_data_processor_connect_dep(nativePtr,input.nativePtr)
     }
 }
-
-

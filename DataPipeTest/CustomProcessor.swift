@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 class CustomProcessor : CSProcessorPProtocol {
     func onProcess() {
         

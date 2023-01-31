@@ -13,21 +13,18 @@ import AVFoundation
 public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
 
-
-
 class CSDataPipe {
     let nativePtr: UnsafeMutableRawPointer?
     var _pixelBuffer: CVPixelBuffer?
     var _pixelCallBack: PixelCallBack?
     
-    
-    
     init() {
+//        print("CSDataPipe init")
         nativePtr = cs_data_pipe_create()
     }
     
     deinit {
-        print("CSDataPipe release")
+//        print("CSDataPipe release")
         cs_data_pipe_release(nativePtr)
     }
     
@@ -42,9 +39,6 @@ class CSDataPipe {
     }
     
 
-    
-    
-    
     
     func createOrCachePixelBuffer() -> CVPixelBuffer? {
         guard let pixelBuffer = _pixelBuffer else {
