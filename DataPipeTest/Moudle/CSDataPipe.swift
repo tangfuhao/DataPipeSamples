@@ -59,19 +59,17 @@ class CSDataPipe {
     }
     
     func getOutputDataType() -> CSDataCategory {
-        guard let category = CSDataCategory(rawValue: cs_data_pipe_get_out_put_data_type(nativePtr).rawValue) else {
+        let outputPointer = cs_data_pipe_get_out_put_node(nativePtr)
+        guard let category = CSDataCategory(rawValue: cs_data_cache_get_data_category(outputPointer).rawValue) else {
             return CSDataCategory.BIN
         }
         return category
     }
     
-    func createOrCachePixelBuffer(bytesPerRow: Int, byteSize: Int) -> CVPixelBuffer? {
+    func createOrCachePixelBuffer(bytesPerRow: Int, width: Int, height: Int, colorSpace: OSType) -> CVPixelBuffer? {
         guard let pixelBuffer = _pixelBuffer else {
-            let width = 640
-            let height = 480
-            let bytesPerRow = width * 4
-            var pixelData = [UInt8](repeating: 0, count: width * height * 4)
-            CVPixelBufferCreateWithBytes(nil, width, height, kCVPixelFormatType_32BGRA, &pixelData, bytesPerRow, nil, nil, nil, &_pixelBuffer)
+            var pixelData = [UInt8](repeating: 0, count: height * bytesPerRow)
+            CVPixelBufferCreateWithBytes(nil, width, height, colorSpace, &pixelData, bytesPerRow, nil, nil, nil, &_pixelBuffer)
             return _pixelBuffer
         }
         
@@ -97,8 +95,11 @@ class CSDataPipe {
         
     }
     
-    func handleReceiverCVPixelBuffer(dataPointer: UnsafeMutableRawPointer, bytesPerRow: Int, byteSize: Int) {
-        guard let pixelBuffer = createOrCachePixelBuffer(bytesPerRow: bytesPerRow, byteSize: byteSize) else {
+    func handleReceiverCVPixelBuffer(dataPointer: UnsafeMutableRawPointer, bytesPerRow: Int, width: Int, byteSize: Int, colorSpace: OSType) {
+        
+        let height = byteSize / bytesPerRow
+        
+        guard let pixelBuffer = createOrCachePixelBuffer(bytesPerRow: bytesPerRow, width: width, height: height, colorSpace: colorSpace) else {
             return
         }
         
@@ -155,10 +156,7 @@ extension CSDataPipe {
             guard let dataInC = dataWrapperNative.pointee.data else {
                 return
             }
-            
-            
 
-            
             let outPutDataType = dataPipeWeakRef.getOutputDataType()
             switch outPutDataType {
             case .PCM :
@@ -168,21 +166,22 @@ extension CSDataPipe {
                 dataPipeWeakRef.handleReceiverCommondData(dataPointer: dataInC)
                 break
             default:
+                let outputPointer = cs_data_pipe_get_out_put_node(dataPipeWeakRef.nativePtr)
+                let bytesPerRow = cs_data_cache_get_bytes_per_row(outputPointer)
+                let width = cs_data_cache_get_width(outputPointer)
+                let byteSize = dataWrapperNative.pointee.dataSize
                 
-//                let bytesPerRow = dataWrapperNative.pointee.
-//                switch outPutDataType {
-//                case .NV21:
-//                    sdasdasd
-//                }
-//
-//
-//                sdasdasd = 2
-//
-//
-//                let byteSize = dataWrapperNative.pointee.dataSize
-//
-//                dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC, bytesPerRow: Int(bytesPerRow), byteSize: Int(byteSize))
-                break
+                
+                switch outPutDataType {
+                case .NV21:
+                    dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC, bytesPerRow: Int(bytesPerRow), width: Int(width), byteSize: Int(byteSize), colorSpace: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
+                case .BGRA32:
+                    dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC, bytesPerRow: Int(bytesPerRow), width: Int(width), byteSize: Int(byteSize), colorSpace: kCVPixelFormatType_32BGRA)
+                case .RGBA32:
+                    dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC, bytesPerRow: Int(bytesPerRow), width: Int(width), byteSize: Int(byteSize), colorSpace: kCVPixelFormatType_32RGBA)
+                default:
+                    break
+                }
             }
         }
     }

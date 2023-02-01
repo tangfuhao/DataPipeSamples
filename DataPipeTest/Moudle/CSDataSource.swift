@@ -19,7 +19,7 @@ import CoreVideo
 enum CSDataCategory : UInt32{
     case PCM = 1
     case BIN = 2
-    case ARGB32 = 3
+    case RGBA32 = 3
     case BGRA32 = 4
     case NV21 = 5
 }
@@ -32,7 +32,10 @@ struct CSPixelParams {
 
 struct CSPcmParams {
     var width: Int
-    var height: Int
+}
+
+struct CSBinaryParams {
+    var size: Int
 }
 
 
@@ -40,6 +43,7 @@ public class CSDataType {
     let category: CSDataCategory
     var pixelParams: CSPixelParams?
     var pcmParams: CSPcmParams?
+    var binaryParams: CSBinaryParams?
     
     init(pixelParams: CSPixelParams) {
         self.pixelParams = pixelParams
@@ -51,18 +55,23 @@ public class CSDataType {
         self.category = .PCM
     }
     
-    
-    func getBytesPerRow() -> Int {
-        guard let pixelParams = pixelParams else {
-            return 0
-        }
-        switch pixelParams.dataCategory {
-            case .NV21  :
-                return pixelParams.width + (pixelParams.width >> 1)
-            default : /* 可选 */
-                return pixelParams.width << 2
-        }
+    init(binaryParams: CSBinaryParams) {
+        self.binaryParams = binaryParams
+        self.category = .BIN
     }
+    
+    
+//    func getBytesPerRow() -> Int {
+//        guard let pixelParams = pixelParams else {
+//            return 0
+//        }
+//        switch pixelParams.dataCategory {
+//            case .NV21  :
+//                return pixelParams.width + (pixelParams.width >> 1)
+//            default : /* 可选 */
+//                return pixelParams.width << 2
+//        }
+//    }
     
     func getPixelParams() -> CSPixelParams? {
         return pixelParams
@@ -76,19 +85,19 @@ public class CSDataType {
         return pixelParams.height
     }
     
-    func getFrameSize() -> Int {
-        switch category {
-        case .PCM:
-            return 0
-        case .BIN:
-            return 0
-        default:
-            guard let pixelParams = pixelParams else {
-                return 0
-            }
-            return pixelParams.height * getBytesPerRow()
-        }
-    }
+//    func getFrameSize() -> Int {
+//        switch category {
+//        case .PCM:
+//            return 0
+//        case .BIN:
+//            return 0
+//        default:
+//            guard let pixelParams = pixelParams else {
+//                return 0
+//            }
+//            return pixelParams.height * getBytesPerRow()
+//        }
+//    }
 }
 
 
@@ -149,14 +158,22 @@ public class CSSourceNodeImplement {
         }
         
         if(dataType.category == .PCM) {
-            cs_data_cache_create_data_cache(nativePtr, Int32(dataType.getFrameSize()) )
+            guard let pcmParams = dataType.pcmParams else {
+                fatalError("Function onRegisterDataType return pcmParams is nil")
+            }
+            let pcmDataSizePerSample = pcmParams.width
+            cs_data_cache_create_data_cache(nativePtr, Int32(pcmDataSizePerSample * 128), CSDataCategoryNative(dataType.category.rawValue) )
         }else if(dataType.category == .BIN) {
-            cs_data_cache_create_data_cache(nativePtr, Int32(dataType.getFrameSize()) )
+            guard let binaryParams = dataType.binaryParams else {
+                fatalError("Function onRegisterDataType return pcmParams is nil")
+            }
+            
+            cs_data_cache_create_data_cache(nativePtr, Int32(binaryParams.size), CSDataCategoryNative(dataType.category.rawValue) )
         }else{
             guard let pixelParams = dataType.pixelParams else {
                 fatalError("Function onRegisterDataType return pixelParams is nil")
             }
-            cs_data_cache_create_video_data_cache(nativePtr, Int32(pixelParams.width), Int32(pixelParams.height), CSDataCategoryNative(pixelParams.dataCategory.rawValue))
+            cs_data_cache_create_video_data_cache(nativePtr, Int32(pixelParams.width), Int32(pixelParams.height), CSDataCategoryNative(dataType.category.rawValue))
         }
         
         
@@ -185,11 +202,12 @@ public class CSSourceNodeImplement {
         }
         
         
+        let bytesPerRow = Int(cs_data_cache_get_bytes_per_row(nativePtr))
         
         //Store data to cache
         let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_cache_lock_data_cache(nativePtr)
         let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
-        CSDataUtils.copyPixelBuffer2Binary(pixelBuffer: pixelBuffer, binaryPointer: destinationPointer, dataSizePerRow: dataType.getBytesPerRow())
+        CSDataUtils.copyPixelBuffer2Binary(pixelBuffer: pixelBuffer, binaryPointer: destinationPointer, dataSizePerRow: bytesPerRow)
         cs_data_cache_unlock_data_cache(nativePtr)
         
 

@@ -212,16 +212,26 @@ void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr) {
 }
 
 
-CSDataCategoryNative cs_data_pipe_get_out_put_data_type(void* dataPipePtr) {
+//CSDataCategoryNative cs_data_pipe_get_out_put_data_type(void* dataPipePtr) {
+//    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+//    if(!dataPipe) return 0;
+//    
+//    CSProcessUnitNative* unitNode = dataPipe->_outPutNode;
+//    if(!unitNode) return 0;
+//    
+//    return unitNode->header.cache._cache_data_params._data_type;
+//}
+
+
+void* cs_data_pipe_get_out_put_node(void* dataPipePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
-    if(!dataPipe) return 0;
+    if(!dataPipe) return NULL;
     
     CSProcessUnitNative* unitNode = dataPipe->_outPutNode;
-    if(!unitNode) return 0;
+    if(!unitNode) return NULL;
     
-    return unitNode->header.cache._cache_data_params._data_type;
+    return unitNode;
 }
-
 
 void cs_data_pipe_vsync(void* dataPipePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
@@ -507,8 +517,10 @@ void cs_data_header_binding(void *sourcePtr, const void* wrapperObjPtr) {
 ///Data cache
 ///
 
-void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize) {
+void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize, CSDataCategoryNative dataCategory) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return;
+    cache->_cache_data_params._data_type = dataCategory;
     
     for (int i = 0; i < CACHE_BUFFER_MAX_SIZE; i++) {
         CSDataWrapNative* dataWrap = calloc(1, sizeof(CSDataWrapNative));
@@ -527,11 +539,13 @@ int cs_get_bytes_per_row(int width, CSDataCategoryNative category) {
     return width << 2;
 }
 
-void cs_data_cache_create_video_data_cache(void *sourcePtr, int width, int height, CSDataCategoryNative category) {
+void cs_data_cache_create_video_data_cache(void *sourcePtr, int width, int height, CSDataCategoryNative dataCategory) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return;
+    cache->_cache_data_params._data_type = dataCategory;
     
-    cache->_cache_data_params._data_type = category;
-    int bytesPerRow = cs_get_bytes_per_row(width, category);
+
+    int bytesPerRow = cs_get_bytes_per_row(width, dataCategory);
     cache->_cache_data_params._params.videoParams.width = width;
     cache->_cache_data_params._params.videoParams.bytesPerRow = bytesPerRow;
     
@@ -552,6 +566,22 @@ CSDataCategoryNative cs_data_cache_get_data_category(void *sourcePtr) {
     if(!cache) return BIN;
     
     return cache->_cache_data_params._data_type;
+}
+
+int cs_data_cache_get_bytes_per_row(void *sourcePtr) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return 0;
+    if (cache->_cache_data_params._data_type < RGBA32) return 0;
+    
+    return cache->_cache_data_params._params.videoParams.bytesPerRow;
+}
+
+int cs_data_cache_get_width(void *sourcePtr) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return 0;
+    if (cache->_cache_data_params._data_type < RGBA32) return 0;
+    
+    return cache->_cache_data_params._params.videoParams.width;
 }
 
 CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr) {

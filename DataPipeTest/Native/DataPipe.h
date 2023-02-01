@@ -12,24 +12,33 @@
 #include <pthread.h>
 
 
+
+typedef struct
+{
+    void* data;
+    int dataSize;
+} CSDataWrapNative;
+
+
+
+
+
+
 typedef enum CSDataCategoryNative{
-    PCM=1, BIN, ARGB32, BGRA32, NV21
+    PCM=1, BIN, RGBA32, BGRA32, NV21
 } CSDataCategoryNative;
 
 
 typedef struct
 {
-    
     int bytesPerRow;
     int width;
 } CSVideoParams;
-
 
 typedef union
 {
     CSVideoParams videoParams;
 } CSDataParamsUnion;
-
 
 typedef struct
 {
@@ -37,11 +46,6 @@ typedef struct
     CSDataParamsUnion                       _params;
 }CSDataParams;
 
-typedef struct
-{
-    void* data;
-    int dataSize;
-} CSDataWrapNative;
 
 //Define data callback function
 typedef void (*PullCallBackPtr)(const void* wrapperObjPtr, CSDataWrapNative*);
@@ -192,18 +196,18 @@ void cs_data_pipe_binding(void* dataPipePtr, const void* wrapperObject);
 void cs_data_pipe_pause(void* dataPipePtr);
 void cs_data_pipe_resume(void* dataPipePtr);
 
+void cs_data_pipe_vsync(void* dataPipePtr);
 
 void cs_data_pipe_set_main_source(void* dataPipePtr,void* sourcePtr);
 void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr);
 
-CSDataCategoryNative cs_data_pipe_get_out_put_data_type(void* dataPipePtr);
-
-
-void cs_data_pipe_vsync(void* dataPipePtr);
+//CSDataCategoryNative cs_data_pipe_get_out_put_data_type(void* dataPipePtr);
+void* cs_data_pipe_get_out_put_node(void* dataPipePtr);
 
 
 // Receiver data from data pipe
 void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback);
+CSDataWrapNative* cs_data_pipe_pull_data(void* dataPipePtr);
 
 
 /**
@@ -217,10 +221,12 @@ void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback);
  Data Cache
  */
 
-void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize);
-void cs_data_cache_create_video_data_cache(void *sourcePtr, int width, int height, CSDataCategoryNative colorSpace);
+void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize, CSDataCategoryNative dataCategory);
+void cs_data_cache_create_video_data_cache(void *sourcePtr, int width, int height, CSDataCategoryNative dataCategory);
 
 CSDataCategoryNative cs_data_cache_get_data_category(void *sourcePtr);
+int cs_data_cache_get_bytes_per_row(void *sourcePtr);
+int cs_data_cache_get_width(void *sourcePtr);
 
 CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr);
 void cs_data_cache_unlock_data_cache(void *sourcePtr);
