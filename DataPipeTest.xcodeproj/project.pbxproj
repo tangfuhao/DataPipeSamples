@@ -21,6 +21,7 @@
 		7BCF499A29794699002BA8EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7BCF499929794699002BA8EF /* Assets.xcassets */; };
 		7BCF499D29794699002BA8EF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7BCF499B29794699002BA8EF /* LaunchScreen.storyboard */; };
 		7BCF49A8297946BB002BA8EF /* DataPipe.c in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF49A7297946BB002BA8EF /* DataPipe.c */; };
+		7BEA00F9298A088F0028EED6 /* CSDataUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA00F8298A088F0028EED6 /* CSDataUtils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		7BCF49A5297946BA002BA8EF /* DataPipeTest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DataPipeTest-Bridging-Header.h"; sourceTree = "<group>"; };
 		7BCF49A6297946BB002BA8EF /* DataPipe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataPipe.h; sourceTree = "<group>"; };
 		7BCF49A7297946BB002BA8EF /* DataPipe.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DataPipe.c; sourceTree = "<group>"; };
+		7BEA00F8298A088F0028EED6 /* CSDataUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSDataUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +64,7 @@
 				7B65CE2F29821B5B0048A751 /* CSDataSource.swift */,
 				7B65CE3129821B720048A751 /* CSDataProcessor.swift */,
 				7B65CE33298224540048A751 /* CSDataPipe.swift */,
+				7BEA00F8298A088F0028EED6 /* CSDataUtils.swift */,
 			);
 			path = Moudle;
 			sourceTree = "<group>";
@@ -190,6 +193,7 @@
 				7BCF499529794698002BA8EF /* ViewController.swift in Sources */,
 				7BCF499129794698002BA8EF /* AppDelegate.swift in Sources */,
 				7BCF499329794698002BA8EF /* SceneDelegate.swift in Sources */,
+				7BEA00F9298A088F0028EED6 /* CSDataUtils.swift in Sources */,
 				7B65CE3B2984CF7C0048A751 /* CameraCapture.swift in Sources */,
 				7B65CE3D29860CDE0048A751 /* CustomProcessor.swift in Sources */,
 				7B65CE34298224540048A751 /* CSDataPipe.swift in Sources */,

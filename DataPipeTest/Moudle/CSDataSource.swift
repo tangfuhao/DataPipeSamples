@@ -23,14 +23,14 @@ enum CSColorSpace {
 }
 
 struct CSPixelParams {
-    var width: UInt
-    var height: UInt
+    var width: Int
+    var height: Int
     var colorSpace: CSColorSpace
 }
 
 struct CSPcmParams {
-    var width: UInt
-    var height: UInt
+    var width: Int
+    var height: Int
     var colorSpace: CSColorSpace
 }
 
@@ -51,30 +51,42 @@ public class CSDataType {
     }
     
     
-    //TODO need fix bugs
-    func getPixelSize() -> Float{
+    func getBytesPerRow() -> Int {
         guard let pixelParams = pixelParams else {
             return 0
         }
-        
         switch pixelParams.colorSpace {
-        case .NV21:
-            return 1.5
-        case .BGRA32: break
-        case .RGBA32:
-            return 4
+            case .NV21  :
+                return pixelParams.width + (pixelParams.width >> 1)
+            default : /* 可选 */
+                return 4 * pixelParams.width
         }
-        
-        return 1.5
     }
     
-    func getFrameSize() -> Int32 {
+//    //TODO need fix bugs
+//    func getPixelSize() -> Float{
+//        guard let pixelParams = pixelParams else {
+//            return 0
+//        }
+//
+//        switch pixelParams.colorSpace {
+//        case .NV21:
+//            return 1.5
+//        case .BGRA32: break
+//        case .RGBA32:
+//            return 4
+//        }
+//
+//        return 1.5
+//    }
+//
+    func getFrameSize() -> Int {
         switch format {
         case .PixelBuffer:
             guard let pixelParams = pixelParams else {
                 return 0
             }
-            return Int32(Float(pixelParams.width) * Float(pixelParams.height) * getPixelSize())
+            return pixelParams.height * getBytesPerRow()
         case .Undefine:
             return 0
         case .PCMData:
@@ -151,7 +163,7 @@ public class CSSourceNodeImplement {
         
         let dataSize = dataType.getFrameSize()
         
-        cs_data_cache_create_data_cache(nativePtr, dataSize)
+        cs_data_cache_create_data_cache(nativePtr, Int32(dataSize))
         makeRelationShip()
         nodeProtocol.onInit()
     }
@@ -166,26 +178,14 @@ public class CSSourceNodeImplement {
         
         
         
-        
         //Store data to cache
-        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        
-        let width = CVPixelBufferGetWidth(pixelBuffer)
-        let height = CVPixelBufferGetHeight(pixelBuffer)
-        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-
-        // Create the pointer to the destination memory
         let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_cache_lock_data_cache(nativePtr)
         let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
-        for row in 0..<height {
-            let src = baseAddress!.advanced(by: row * bytesPerRow)
-            let dest = destinationPointer.advanced(by: Int(Float(row) * Float(width) * dataType.getPixelSize()))
-            memcpy(dest, src, Int(Float(width) * dataType.getPixelSize()))
-        }
+        CSDataUtils.convertPixelBuffer2Binary(pixelBuffer: pixelBuffer, binaryPointer: destinationPointer, dataSizePerRow: dataType.getBytesPerRow())
         cs_data_cache_unlock_data_cache(nativePtr)
         
-        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+
+        
     }
     
     //Make nodes fixed
