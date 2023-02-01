@@ -20,11 +20,11 @@ typedef struct
 } CSDataWrapNative;
 
 //Define data callback function
-typedef void (*PullCallBackPtr)(const void* swiftObjPtr, CSDataWrapNative*);
+typedef void (*PullCallBackPtr)(const void* wrapperObjPtr, CSDataWrapNative*);
 
-typedef void (*PUInitCallBackPtr)(const void* swiftObjPtr);
-typedef void (*PUReleaseCallBackPtr)(const void* swiftObjPtr);
-typedef void (*PUProcessCallBackPtr)(const void* swiftObjPtr);
+typedef void (*PUInitCallBackPtr)(const void* wrapperObjPtr);
+typedef void (*PUReleaseCallBackPtr)(const void* wrapperObjPtr);
+typedef void (*PUProcessCallBackPtr)(const void* wrapperObjPtr);
 
 
 
@@ -60,7 +60,7 @@ typedef struct
     int             _status;
     
     
-    const void*           _bindingSwiftObject;
+    const void*           _bindingWrapperObject;
 } CSDataHeaderNative;
 
 
@@ -115,7 +115,7 @@ typedef struct
     
     
     CSProcessUnitNative*  _outPutNode;
-    const void*           _bindingSwiftObject;
+    const void*           _bindingWrapperObject;
     
 } CSDataPipeNative;
 
@@ -209,7 +209,7 @@ void* cs_data_source_create(void);
 void cs_data_source_release(void *sourcePtr);
 
 
-void cs_data_header_binding(void* sourcePtr, const void* swiftObjPtr);
+void cs_data_header_binding(void* sourcePtr, const void* wrapperObjPtr);
 void cs_data_source_register_onInit_function(void* sourcePtr, PUInitCallBackPtr callBack);
 void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBackPtr callBack);
 

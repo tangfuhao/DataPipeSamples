@@ -73,7 +73,7 @@ void cs_data_pipe_process(CSDataPipeNative *dataPipe) {
     PullCallBackPtr callBack = dataPipe->_callback;
     if(callBack != NULL) {
         CSDataWrapNative* dataWrap = cs_data_cache_lock_data_cache(endProcessor);
-        callBack(dataPipe->_bindingSwiftObject,dataWrap);
+        callBack(dataPipe->_bindingWrapperObject,dataWrap);
         cs_data_cache_unlock_data_cache(dataPipe);
     }
 }
@@ -183,7 +183,7 @@ void cs_data_pipe_release(void* dataPipePtr) {
 void cs_data_pipe_binding(void* dataPipePtr, const void* wrapperObject) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
     if(!dataPipe) return;
-    dataPipe->_bindingSwiftObject = wrapperObject;
+    dataPipe->_bindingWrapperObject = wrapperObject;
 }
 
 
@@ -280,7 +280,7 @@ void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback) 
 
 void cs_processor_on_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     if(unit->_onProcessFunc != NULL){
-        unit->_onProcessFunc(unit->header._bindingSwiftObject);
+        unit->_onProcessFunc(unit->header._bindingWrapperObject);
     }
 }
 
@@ -304,7 +304,7 @@ void cs_processor_process_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNat
 //8. Load Init Function
 void cs_header_process_init(CSDataPipeNative *dataPipe, CSDataHeaderNative* header) {
     if (header->_onIntFunc != NULL) {
-        header->_onIntFunc(header->_bindingSwiftObject);
+        header->_onIntFunc(header->_bindingWrapperObject);
     }
     header->_status = header->_status | CS_STATUS_INIT;
 }
@@ -356,7 +356,7 @@ void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit)
 void cs_data_processor_release_internal(CSProcessUnitNative* processor) {
     if(!processor) return;
     if(processor->header._onReleaseFunc){
-        processor->header._onReleaseFunc(processor->header._bindingSwiftObject);
+        processor->header._onReleaseFunc(processor->header._bindingWrapperObject);
     }
 }
 
@@ -460,7 +460,7 @@ void cs_data_source_release_internal(CSDataSourceNative *source) {
     if (!source) return;
     
     if(source->header._onReleaseFunc){
-        source->header._onReleaseFunc(source->header._bindingSwiftObject);
+        source->header._onReleaseFunc(source->header._bindingWrapperObject);
     }
 }
 
@@ -481,12 +481,12 @@ void cs_data_source_register_onRelease_function(void* sourcePtr, PUReleaseCallBa
     source->header._onReleaseFunc = callBack;
 }
 
-void cs_data_header_binding(void *sourcePtr, const void* swiftObjPtr) {
+void cs_data_header_binding(void *sourcePtr, const void* wrapperObjPtr) {
     CSDataSourceNative *source = NULL;
     source = (CSDataSourceNative*)sourcePtr;
     if (!source) return;
     
-    source->header._bindingSwiftObject = swiftObjPtr;
+    source->header._bindingWrapperObject = wrapperObjPtr;
 }
 
 
