@@ -31,7 +31,7 @@ class YUV2RGBProcessor : CSProcessorPProtocol {
         }
         
         //Step #2 Transform data based on the input data
-        guard let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
+        guard let rgbPixelBuffer = converYUVToBGRAPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
             return
         }
         
@@ -47,12 +47,16 @@ class YUV2RGBProcessor : CSProcessorPProtocol {
         
     }
     
-    func onRegisterDataType() -> CSDataType {
+    func onRegisterInputDataType() -> [CSDataType] {
+        return [CSDataType(pixelParams: CSPixelParams(width: 640, height: 480, dataCategory: .NV21))]
+    }
+    
+    func onRegisterOutputDataType() -> CSDataType {
         return CSDataType(pixelParams: CSPixelParams(width: 640, height: 480, dataCategory: .BGRA32))
     }
     
     
-    func getRGBPixelBuffer(yuvPixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
+    func converYUVToBGRAPixelBuffer(yuvPixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
         if (rgbPixelBufferTemp ==  nil){
             let width = CVPixelBufferGetWidth(yuvPixelBuffer)
             let height = CVPixelBufferGetHeight(yuvPixelBuffer)

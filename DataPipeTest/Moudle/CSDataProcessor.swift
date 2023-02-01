@@ -10,6 +10,7 @@ import CoreVideo
 
 public protocol CSNodeProcessorProtocol : CSNodeProtocol {
     func onProcess()
+    func onRegisterInputDataType() -> [CSDataType]
 }
 
 public typealias CSProcessorPProtocol = CSProcessorNodeImplement & CSNodeProcessorProtocol

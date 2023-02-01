@@ -8,6 +8,8 @@
 import Foundation
 
 class CustomProcessor : CSProcessorPProtocol {
+    
+    
     func onProcess() {
         
     }
@@ -20,7 +22,11 @@ class CustomProcessor : CSProcessorPProtocol {
         
     }
     
-    func onRegisterDataType() -> CSDataType {
+    func onRegisterInputDataType() -> [CSDataType] {
+        return [CSDataType(pixelParams: CSPixelParams(width: 640, height: 480, dataCategory: .BGRA32))]
+    }
+    
+    func onRegisterOutputDataType() -> CSDataType {
         return CSDataType(pixelParams: CSPixelParams(width: 640, height: 480, dataCategory: .BGRA32))
     }
     

@@ -107,7 +107,7 @@ public typealias CSSourcePProtocol = CSSourceNodeImplement & CSNodeProtocol
 public protocol CSNodeProtocol : AnyObject {
     func onInit()
     func onRelease()
-    func onRegisterDataType() -> CSDataType
+    func onRegisterOutputDataType() -> CSDataType
 }
 
 
@@ -154,24 +154,24 @@ public class CSSourceNodeImplement {
     
     func createCacheBuffer() {
         guard let dataType = dataType else {
-            fatalError("Function onRegisterDataType return is nil")
+            fatalError("Function onRegisterOutputDataType return is nil")
         }
         
         if(dataType.category == .PCM) {
             guard let pcmParams = dataType.pcmParams else {
-                fatalError("Function onRegisterDataType return pcmParams is nil")
+                fatalError("Function onRegisterOutputDataType return pcmParams is nil")
             }
             let pcmDataSizePerSample = pcmParams.width
             cs_data_cache_create_data_cache(nativePtr, Int32(pcmDataSizePerSample * 128), CSDataCategoryNative(dataType.category.rawValue) )
         }else if(dataType.category == .BIN) {
             guard let binaryParams = dataType.binaryParams else {
-                fatalError("Function onRegisterDataType return pcmParams is nil")
+                fatalError("Function onRegisterOutputDataType return pcmParams is nil")
             }
             
             cs_data_cache_create_data_cache(nativePtr, Int32(binaryParams.size), CSDataCategoryNative(dataType.category.rawValue) )
         }else{
             guard let pixelParams = dataType.pixelParams else {
-                fatalError("Function onRegisterDataType return pixelParams is nil")
+                fatalError("Function onRegisterOutputDataType return pixelParams is nil")
             }
             cs_data_cache_create_video_data_cache(nativePtr, Int32(pixelParams.width), Int32(pixelParams.height), CSDataCategoryNative(dataType.category.rawValue))
         }
@@ -185,7 +185,7 @@ public class CSSourceNodeImplement {
             fatalError("Conver data type error")
         }
         
-        let dataType = nodeProtocol.onRegisterDataType()
+        let dataType = nodeProtocol.onRegisterOutputDataType()
         self.dataType = dataType
         
         createCacheBuffer()
