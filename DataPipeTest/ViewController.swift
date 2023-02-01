@@ -37,13 +37,18 @@ class ViewController: UIViewController {
 
         let dataSource = CameraSource()
         let dataProcesser = YUV2RGBProcessor()
+        
         dataProcesser.connectInput(input: dataSource)
+        
         dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
 
-        dataPipe.ReceiveData { pixelBuffer in
-            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
-        }
-//        dataPipe.PullPixelData()
+//        dataPipe.ReceiveData { pixelBuffer in
+//            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
+//        }
+//
+//
+        
+        
 
     }
     

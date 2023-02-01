@@ -24,7 +24,7 @@ class CameraSource : CSSourcePProtocol {
     }
     
     func onRegisterDataType() -> CSDataType {
-        return CSDataType(format: .PixelBuffer,pixelParams: CSPixelParams(width: 640, height: 480, colorSpace: .NV21))
+        return CSDataType(pixelParams: CSPixelParams(width: 640, height: 480, dataCategory: .NV21))
     }
 
 }

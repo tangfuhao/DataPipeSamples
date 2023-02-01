@@ -12,11 +12,35 @@
 #include <pthread.h>
 
 
+typedef enum CSDataCategoryNative{
+    PCM=1, BIN, ARGB32, BGRA32, NV21
+} CSDataCategoryNative;
+
+
+typedef struct
+{
+    
+    int bytesPerRow;
+    int width;
+} CSVideoParams;
+
+
+typedef union
+{
+    CSVideoParams videoParams;
+} CSDataParamsUnion;
+
+
+typedef struct
+{
+    CSDataCategoryNative                    _data_type;
+    CSDataParamsUnion                       _params;
+}CSDataParams;
+
 typedef struct
 {
     void* data;
     int dataSize;
-    
 } CSDataWrapNative;
 
 //Define data callback function
@@ -34,6 +58,9 @@ typedef struct
 
     int                 _readIndex;
     int                 _writeIndex;
+    
+    CSDataParams        _cache_data_params;
+    
     
     #define             CACHE_BUFFER_MAX_SIZE        2
     void*               _cacheBuffer[CACHE_BUFFER_MAX_SIZE];
@@ -169,6 +196,9 @@ void cs_data_pipe_resume(void* dataPipePtr);
 void cs_data_pipe_set_main_source(void* dataPipePtr,void* sourcePtr);
 void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr);
 
+CSDataCategoryNative cs_data_pipe_get_out_put_data_type(void* dataPipePtr);
+
+
 void cs_data_pipe_vsync(void* dataPipePtr);
 
 
@@ -188,6 +218,10 @@ void cs_data_pipe_register_receiver(void* dataPipePtr,PullCallBackPtr callback);
  */
 
 void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize);
+void cs_data_cache_create_video_data_cache(void *sourcePtr, int width, int height, CSDataCategoryNative colorSpace);
+
+CSDataCategoryNative cs_data_cache_get_data_category(void *sourcePtr);
+
 CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr);
 void cs_data_cache_unlock_data_cache(void *sourcePtr);
 

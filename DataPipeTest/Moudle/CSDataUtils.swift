@@ -9,10 +9,9 @@ import Foundation
 import CoreVideo
 
 class CSDataUtils {
-    static func convertPixelBuffer2Binary(pixelBuffer: CVPixelBuffer, binaryPointer: UnsafeMutableRawPointer, dataSizePerRow: Int){
+    static func copyPixelBuffer2Binary(pixelBuffer: CVPixelBuffer, binaryPointer: UnsafeMutableRawPointer, dataSizePerRow: Int){
         CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
         
-        let width = CVPixelBufferGetWidth(pixelBuffer)
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
@@ -28,7 +27,19 @@ class CSDataUtils {
         CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
     }
     
-    static func convertBinary2PixelBuffer(){
-        
+    static func copyBinary2PixelBuffer(binaryPointer: UnsafeMutableRawPointer, pixelBuffer: CVPixelBuffer, dataSizePerRow: Int){
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+
+
+        // Copy the data to the pixel buffer
+        for row in 0..<height {
+            let dest = baseAddress!.advanced(by: row * bytesPerRow)
+            let src = binaryPointer.advanced(by: row * dataSizePerRow)
+            memcpy(dest, src, dataSizePerRow)
+        }
+        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
     }
 }

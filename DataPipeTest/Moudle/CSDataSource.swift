@@ -9,45 +9,46 @@ import Foundation
 import CoreVideo
 
 
-enum CSDataFormat {
-    case Undefine
-    case PixelBuffer
-    case PCMData
-    case JsonData
-}
+//enum CSDataFormat {
+//    case Undefine
+//    case PixelBuffer
+//    case PCMData
+//    case JsonData
+//}
 
-enum CSColorSpace {
-    case RGBA32
-    case BGRA32
-    case NV21
+enum CSDataCategory : UInt32{
+    case PCM = 1
+    case BIN = 2
+    case ARGB32 = 3
+    case BGRA32 = 4
+    case NV21 = 5
 }
 
 struct CSPixelParams {
     var width: Int
     var height: Int
-    var colorSpace: CSColorSpace
+    var dataCategory: CSDataCategory
 }
 
 struct CSPcmParams {
     var width: Int
     var height: Int
-    var colorSpace: CSColorSpace
 }
 
 
 public class CSDataType {
-    let format: CSDataFormat
+    let category: CSDataCategory
     var pixelParams: CSPixelParams?
     var pcmParams: CSPcmParams?
     
-    init(format: CSDataFormat, pixelParams: CSPixelParams) {
-        self.format = format
+    init(pixelParams: CSPixelParams) {
         self.pixelParams = pixelParams
+        self.category = pixelParams.dataCategory
     }
     
-    init(format: CSDataFormat, pcmParams: CSPcmParams) {
-        self.format = format
+    init(pcmParams: CSPcmParams) {
         self.pcmParams = pcmParams
+        self.category = .PCM
     }
     
     
@@ -55,44 +56,37 @@ public class CSDataType {
         guard let pixelParams = pixelParams else {
             return 0
         }
-        switch pixelParams.colorSpace {
+        switch pixelParams.dataCategory {
             case .NV21  :
                 return pixelParams.width + (pixelParams.width >> 1)
             default : /* 可选 */
-                return 4 * pixelParams.width
+                return pixelParams.width << 2
         }
     }
     
-//    //TODO need fix bugs
-//    func getPixelSize() -> Float{
-//        guard let pixelParams = pixelParams else {
-//            return 0
-//        }
-//
-//        switch pixelParams.colorSpace {
-//        case .NV21:
-//            return 1.5
-//        case .BGRA32: break
-//        case .RGBA32:
-//            return 4
-//        }
-//
-//        return 1.5
-//    }
-//
+    func getPixelParams() -> CSPixelParams? {
+        return pixelParams
+    }
+    
+    func getRowCount() -> Int {
+        guard let pixelParams = pixelParams else {
+            return 0
+        }
+        
+        return pixelParams.height
+    }
+    
     func getFrameSize() -> Int {
-        switch format {
-        case .PixelBuffer:
+        switch category {
+        case .PCM:
+            return 0
+        case .BIN:
+            return 0
+        default:
             guard let pixelParams = pixelParams else {
                 return 0
             }
             return pixelParams.height * getBytesPerRow()
-        case .Undefine:
-            return 0
-        case .PCMData:
-            return 0
-        case .JsonData:
-            return 0
         }
     }
 }
@@ -149,7 +143,25 @@ public class CSSourceNodeImplement {
     }
     
     
-    
+    func createCacheBuffer() {
+        guard let dataType = dataType else {
+            fatalError("Function onRegisterDataType return is nil")
+        }
+        
+        if(dataType.category == .PCM) {
+            cs_data_cache_create_data_cache(nativePtr, Int32(dataType.getFrameSize()) )
+        }else if(dataType.category == .BIN) {
+            cs_data_cache_create_data_cache(nativePtr, Int32(dataType.getFrameSize()) )
+        }else{
+            guard let pixelParams = dataType.pixelParams else {
+                fatalError("Function onRegisterDataType return pixelParams is nil")
+            }
+            cs_data_cache_create_video_data_cache(nativePtr, Int32(pixelParams.width), Int32(pixelParams.height), CSDataCategoryNative(pixelParams.dataCategory.rawValue))
+        }
+        
+        
+        
+    }
     
     func handleInit() {
         guard let nodeProtocol = self as? any CSNodeProtocol else {
@@ -159,11 +171,7 @@ public class CSSourceNodeImplement {
         let dataType = nodeProtocol.onRegisterDataType()
         self.dataType = dataType
         
-        
-        
-        let dataSize = dataType.getFrameSize()
-        
-        cs_data_cache_create_data_cache(nativePtr, Int32(dataSize))
+        createCacheBuffer()
         makeRelationShip()
         nodeProtocol.onInit()
     }
@@ -172,7 +180,7 @@ public class CSSourceNodeImplement {
     
     func storePixelData(pixelBuffer: CVPixelBuffer) {
         guard let dataType = dataType,
-              dataType.format == .PixelBuffer else {
+              dataType.category == CSDataCategory(rawValue: cs_data_cache_get_data_category(nativePtr).rawValue) else {
             fatalError("InputType is wrong")
         }
         
@@ -181,7 +189,7 @@ public class CSSourceNodeImplement {
         //Store data to cache
         let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_cache_lock_data_cache(nativePtr)
         let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
-        CSDataUtils.convertPixelBuffer2Binary(pixelBuffer: pixelBuffer, binaryPointer: destinationPointer, dataSizePerRow: dataType.getBytesPerRow())
+        CSDataUtils.copyPixelBuffer2Binary(pixelBuffer: pixelBuffer, binaryPointer: destinationPointer, dataSizePerRow: dataType.getBytesPerRow())
         cs_data_cache_unlock_data_cache(nativePtr)
         
 

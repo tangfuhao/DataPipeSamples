@@ -212,6 +212,17 @@ void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr) {
 }
 
 
+CSDataCategoryNative cs_data_pipe_get_out_put_data_type(void* dataPipePtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return 0;
+    
+    CSProcessUnitNative* unitNode = dataPipe->_outPutNode;
+    if(!unitNode) return 0;
+    
+    return unitNode->header.cache._cache_data_params._data_type;
+}
+
+
 void cs_data_pipe_vsync(void* dataPipePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
     if(!dataPipe) return;
@@ -494,6 +505,7 @@ void cs_data_header_binding(void *sourcePtr, const void* wrapperObjPtr) {
 
 ////////////////////////////////////////////////////////////////
 ///Data cache
+///
 
 void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
@@ -507,9 +519,44 @@ void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize) {
     }
 }
 
-CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr) {
+int cs_get_bytes_per_row(int width, CSDataCategoryNative category) {
+    if (category == NV21){
+        return width + (width >> 1);
+    }
+    
+    return width << 2;
+}
+
+void cs_data_cache_create_video_data_cache(void *sourcePtr, int width, int height, CSDataCategoryNative category) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     
+    cache->_cache_data_params._data_type = category;
+    int bytesPerRow = cs_get_bytes_per_row(width, category);
+    cache->_cache_data_params._params.videoParams.width = width;
+    cache->_cache_data_params._params.videoParams.bytesPerRow = bytesPerRow;
+    
+    for (int i = 0; i < CACHE_BUFFER_MAX_SIZE; i++) {
+        CSDataWrapNative* dataWrap = calloc(1, sizeof(CSDataWrapNative));
+        
+        int dataSize = height * bytesPerRow;
+        
+        dataWrap->dataSize = dataSize;
+        dataWrap->data = malloc(dataSize);
+        cache->_cacheBuffer[i] = dataWrap;
+    }
+}
+
+
+CSDataCategoryNative cs_data_cache_get_data_category(void *sourcePtr) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return BIN;
+    
+    return cache->_cache_data_params._data_type;
+}
+
+CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr) {
+    CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return NULL;
 
     return cache->_cacheBuffer[cache->_writeIndex];
     
@@ -517,5 +564,7 @@ CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr) {
 
 void cs_data_cache_unlock_data_cache(void *sourcePtr) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
+    if(!cache) return ;
+    
     cache->_writeIndex = (cache->_writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
 }

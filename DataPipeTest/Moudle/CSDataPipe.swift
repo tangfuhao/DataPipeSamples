@@ -58,17 +58,19 @@ class CSDataPipe {
         cs_data_pipe_set_output_node(nativePtr, output.nativePtr)
     }
     
-
+    func getOutputDataType() -> CSDataCategory {
+        guard let category = CSDataCategory(rawValue: cs_data_pipe_get_out_put_data_type(nativePtr).rawValue) else {
+            return CSDataCategory.BIN
+        }
+        return category
+    }
     
-    func createOrCachePixelBuffer() -> CVPixelBuffer? {
+    func createOrCachePixelBuffer(bytesPerRow: Int, byteSize: Int) -> CVPixelBuffer? {
         guard let pixelBuffer = _pixelBuffer else {
             let width = 640
             let height = 480
             let bytesPerRow = width * 4
             var pixelData = [UInt8](repeating: 0, count: width * height * 4)
-
-            // Fill pixelData with your image data
-
             CVPixelBufferCreateWithBytes(nil, width, height, kCVPixelFormatType_32BGRA, &pixelData, bytesPerRow, nil, nil, nil, &_pixelBuffer)
             return _pixelBuffer
         }
@@ -87,27 +89,21 @@ class CSDataPipe {
     }
     
     
-    func handleReceiverCVPixelBuffer(dataPointer: UnsafeMutableRawPointer) {
-        guard let pixelBuffer = createOrCachePixelBuffer() else {
+    func handleReceiverCommondData(dataPointer: UnsafeMutableRawPointer) {
+        
+    }
+    
+    func handleReceiverPCMData(dataPointer: UnsafeMutableRawPointer) {
+        
+    }
+    
+    func handleReceiverCVPixelBuffer(dataPointer: UnsafeMutableRawPointer, bytesPerRow: Int, byteSize: Int) {
+        guard let pixelBuffer = createOrCachePixelBuffer(bytesPerRow: bytesPerRow, byteSize: byteSize) else {
             return
         }
         
-        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        let width = CVPixelBufferGetWidth(pixelBuffer)
-        let height = CVPixelBufferGetHeight(pixelBuffer)
-        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-
-
-        // Copy the data to the pixel buffer
-        for row in 0..<height {
-            let dest = baseAddress!.advanced(by: row * bytesPerRow)
-            let src = dataPointer.advanced(by: row * width * 4)
-            memcpy(dest, src, width * 4)
-        }
-        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        
-
+        CSDataUtils.copyBinary2PixelBuffer(binaryPointer: dataPointer, pixelBuffer: pixelBuffer, dataSizePerRow: bytesPerRow)
+    
         DispatchQueue.main.async  {
             self.callPixelCallBack()
         }
@@ -123,11 +119,6 @@ class CSDataPipe {
 
 
 extension CSDataPipe {
-    public static func createDataPipe() -> CSDataPipe {
-        return CSDataPipe()
-    }
-
-    
     func Pause() {
         
     }
@@ -164,8 +155,35 @@ extension CSDataPipe {
             guard let dataInC = dataWrapperNative.pointee.data else {
                 return
             }
+            
+            
 
-            dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC)
+            
+            let outPutDataType = dataPipeWeakRef.getOutputDataType()
+            switch outPutDataType {
+            case .PCM :
+                dataPipeWeakRef.handleReceiverPCMData(dataPointer: dataInC)
+                break
+            case .BIN :
+                dataPipeWeakRef.handleReceiverCommondData(dataPointer: dataInC)
+                break
+            default:
+                
+//                let bytesPerRow = dataWrapperNative.pointee.
+//                switch outPutDataType {
+//                case .NV21:
+//                    sdasdasd
+//                }
+//
+//
+//                sdasdasd = 2
+//
+//
+//                let byteSize = dataWrapperNative.pointee.dataSize
+//
+//                dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC, bytesPerRow: Int(bytesPerRow), byteSize: Int(byteSize))
+                break
+            }
         }
     }
     
