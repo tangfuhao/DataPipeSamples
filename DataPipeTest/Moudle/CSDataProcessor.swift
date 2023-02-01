@@ -51,7 +51,7 @@ public class CSProcessorNodeImplement : CSSourceNodeImplement {
 
         let pixelData = dataCachePointer.pointee.data!
         var pixelBuffer: CVPixelBuffer?
-        CVPixelBufferCreateWithBytes(nil, width, height, kCVPixelFormatType_32BGRA, pixelData, bytesPerRow, nil, nil, nil, &pixelBuffer)
+        CVPixelBufferCreateWithBytes(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, pixelData, bytesPerRow, nil, nil, nil, &pixelBuffer)
 
         return pixelBuffer
     }

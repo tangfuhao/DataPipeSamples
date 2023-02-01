@@ -68,8 +68,7 @@ class CSDataPipe {
     
     func createOrCachePixelBuffer(bytesPerRow: Int, width: Int, height: Int, colorSpace: OSType) -> CVPixelBuffer? {
         guard let pixelBuffer = _pixelBuffer else {
-            var pixelData = [UInt8](repeating: 0, count: height * bytesPerRow)
-            CVPixelBufferCreateWithBytes(nil, width, height, colorSpace, &pixelData, bytesPerRow, nil, nil, nil, &_pixelBuffer)
+            CVPixelBufferCreate(kCFAllocatorDefault, width, height, colorSpace, nil, &_pixelBuffer)
             return _pixelBuffer
         }
         

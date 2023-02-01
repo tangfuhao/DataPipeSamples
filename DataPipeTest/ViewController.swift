@@ -42,9 +42,9 @@ class ViewController: UIViewController {
         
         dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
 
-//        dataPipe.ReceiveData { pixelBuffer in
-//            print("width: \(CVPixelBufferGetWidth(pixelBuffer))")
-//        }
+        dataPipe.ReceiveData { pixelBuffer in
+//            print("width: \(CVPixelBufferGetWidth(pixelBuffer)),format: \(CVPixelBufferGetPixelFormatType(pixelBuffer))")
+        }
 //
 //
         

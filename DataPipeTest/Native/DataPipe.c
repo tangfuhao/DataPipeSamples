@@ -72,9 +72,8 @@ void cs_data_pipe_process(CSDataPipeNative *dataPipe) {
 
     PullCallBackPtr callBack = dataPipe->_callback;
     if(callBack != NULL) {
-        CSDataWrapNative* dataWrap = cs_data_cache_lock_data_cache(endProcessor);
+        CSDataWrapNative* dataWrap = cs_data_cache_read_data_cache(endProcessor);
         callBack(dataPipe->_bindingWrapperObject,dataWrap);
-        cs_data_cache_unlock_data_cache(dataPipe);
     }
 }
 
@@ -359,6 +358,31 @@ void cs_processor_init_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative
 }
 
 
+void cs_operate_add_read_index(CSDataHeaderNative* node) {
+    
+    if(node->cache._readed){
+        node->cache._readed = 0;
+        node->cache._readIndex = (node->cache._readIndex + 1) % CACHE_BUFFER_MAX_SIZE;
+    }
+    
+    if(node->context_type == CS_TYPE_PROCESSOR){
+        CSProcessUnitNative* processor = (CSProcessUnitNative*)node;
+        cs_data_pipe_iterate_topology_node(processor,cs_operate_release);
+    }
+}
+
+//TODO: consider muti read sisuation ,create index var for every pipe
+//add 1 to all read index
+void cs_processor_cache_buffer_index_dependent(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
+    cs_data_pipe_iterate_topology_node(unit,cs_operate_add_read_index);
+    
+    if(unit->header.cache._readed){
+        unit->header.cache._readed = 0;
+        unit->header.cache._readIndex = (unit->header.cache._readIndex + 1) % CACHE_BUFFER_MAX_SIZE;
+    }
+}
+
+
 // 1.
 void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit) {
     //Load Init Dependent
@@ -366,6 +390,9 @@ void cs_processor_process(CSDataPipeNative *dataPipe, CSProcessUnitNative* unit)
     
     //Load Process Dependent
     cs_processor_process_dependent(dataPipe, unit);
+    
+    //Load Add 1 Dependent
+    cs_processor_cache_buffer_index_dependent(dataPipe, unit);
 }
 
 
@@ -387,6 +414,7 @@ void* cs_data_processor_create(void) {
     // Alloc processor context
     processor = (CSProcessUnitNative*)calloc(1, sizeof(CSProcessUnitNative));
     processor->header.cache._writeIndex = 1;
+    processor->header.context_type = CS_TYPE_PROCESSOR;
     if (!processor) return NULL;
     return processor;
 }
@@ -408,18 +436,20 @@ void cs_data_processor_connect_dep(void* processorPtr,void *depPtr) {
     if(!dependentUnit) return;
     
     
-    if(processor->_dependentInputPtr == NULL) {
-        processor->_dependentInputPtr = malloc(sizeof(void*) * (processor->_dependentUnitCount + 1));
-    }else{
-        void* tempZone = malloc(sizeof(void*) * processor->_dependentUnitCount);
-        void* srcPtr = processor->_dependentInputPtr;
-        int copySize = sizeof(void*) * processor->_dependentUnitCount;
-        memcpy(tempZone, srcPtr, copySize);
-        processor->_dependentInputPtr = tempZone;
-        free(srcPtr);
-    }
+//    if(processor->_dependentInputPtr == NULL) {
+//        processor->_dependentInputPtr = malloc(sizeof(void*) * (processor->_dependentUnitCount + 1));
+//    }else{
+//        void* tempZone = malloc(sizeof(void*) * processor->_dependentUnitCount);
+//        void* srcPtr = processor->_dependentInputPtr;
+//        int copySize = sizeof(void*) * processor->_dependentUnitCount;
+//        memcpy(tempZone, srcPtr, copySize);
+//        processor->_dependentInputPtr = tempZone;
+//        free(srcPtr);
+//    }
+    
     processor->_dependentInputPtr[processor->_dependentUnitCount] = dependentUnit;
     processor->_dependentUnitCount += 1;
+    
 }
 
 
@@ -432,17 +462,7 @@ CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputI
     CSDataCacheNative* dataCache = (CSDataCacheNative*)dependentUnit;
     if(!dataCache) return NULL;
     
-    
-    if(dataCache->_readIndex == dataCache->_writeIndex){
-        if(dataCache->_writeIndex == 0){
-            dataCache->_readIndex = CACHE_BUFFER_MAX_SIZE - 1;
-        }else{
-            dataCache->_readIndex = dataCache->_writeIndex - 1;
-        }
-    }
-    
-    
-    return dataCache->_cacheBuffer[dataCache->_readIndex];
+    return cs_data_cache_read_data_cache(dataCache);
 }
 
 void cs_data_processor_register_onProcess_function(void* sourcePtr, PUProcessCallBackPtr callBack) {
@@ -463,6 +483,7 @@ void* cs_data_source_create(void) {
     CSDataSourceNative *source = NULL;
     source = (CSDataSourceNative*)calloc(1, sizeof(CSDataSourceNative));
     source->header.cache._writeIndex = 1;
+    source->header.context_type = CS_TYPE_SOURCE;
     if (!source) return NULL;
     
     return source;
@@ -596,5 +617,34 @@ void cs_data_cache_unlock_data_cache(void *sourcePtr) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     if(!cache) return ;
     
-    cache->_writeIndex = (cache->_writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
+    printf("%p 写:%d \n",sourcePtr,cache->_writeIndex);
+    
+    CSDataHeaderNative* sasdasd = (CSDataHeaderNative*)sourcePtr;
+    
+    if(sasdasd->context_type == CS_TYPE_PROCESSOR){
+        cache->_writeIndex = (cache->_writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
+    }else{
+        cache->_writeIndex = (cache->_writeIndex + 1) % CACHE_BUFFER_MAX_SIZE;
+    }
+}
+
+CSDataWrapNative* cs_data_cache_read_data_cache(void *sourcePtr) {
+    CSDataCacheNative* dataCache = (CSDataCacheNative*)sourcePtr;
+    if(!dataCache) return NULL;
+    
+    
+    
+    printf("%p 欲读:%d \n",sourcePtr,dataCache->_readIndex);
+    
+    if(dataCache->_readIndex == dataCache->_writeIndex){
+        if(dataCache->_writeIndex == 0){
+            dataCache->_readIndex = CACHE_BUFFER_MAX_SIZE - 1;
+        }else{
+            dataCache->_readIndex = dataCache->_writeIndex - 1;
+        }
+    }
+    //mark readed
+    dataCache->_readed = 1;
+    printf("%p 实际读:%d \n",sourcePtr,dataCache->_readIndex);
+    return dataCache->_cacheBuffer[dataCache->_readIndex];
 }

@@ -62,7 +62,7 @@ typedef struct
 
     int                 _readIndex;
     int                 _writeIndex;
-    
+    int                 _readed;
     CSDataParams        _cache_data_params;
     
     
@@ -114,7 +114,8 @@ typedef struct
     
     //Dependent unit
     int                 _dependentUnitCount;
-    void**              _dependentInputPtr;
+    
+    void*               _dependentInputPtr[6];
 
     
     #define CONNECT_NODE_MAX        3
@@ -230,6 +231,8 @@ int cs_data_cache_get_width(void *sourcePtr);
 
 CSDataWrapNative* cs_data_cache_lock_data_cache(void *sourcePtr);
 void cs_data_cache_unlock_data_cache(void *sourcePtr);
+
+CSDataWrapNative* cs_data_cache_read_data_cache(void *sourcePtr);
 
 
 
