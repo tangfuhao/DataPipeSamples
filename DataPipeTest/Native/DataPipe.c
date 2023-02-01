@@ -45,16 +45,18 @@ int cs_data_pipe_wari_vsync_frequency(CSDataPipeNative *dataPipe) {
     if (result) return result;
     
     pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
-    if (!(dataPipe->_status & CS_DP_STATUS_VSYNC)){
+    if (!(result = (dataPipe->_status & CS_DP_STATUS_VSYNC))){
         pthread_cond_wait(&(dataPipe->_status_sync_cond), &(dataPipe->_status_sync_mutex));
     }
     pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
     
+    result = dataPipe->_status & CS_DP_STATUS_VSYNC;
+    dataPipe->_status &= (~CS_DP_STATUS_VSYNC);
     
     if(dataPipe->_status & CS_DP_STATUS_CLOSE){
         return 0;
     }else{
-        return dataPipe->_status & CS_DP_STATUS_VSYNC;
+        return result;
     }
     
 }
@@ -62,14 +64,16 @@ int cs_data_pipe_wari_vsync_frequency(CSDataPipeNative *dataPipe) {
 
 void cs_data_pipe_process(CSDataPipeNative *dataPipe) {
     
+    //TODO: Consider _outPutNode do not setting situation
     CSProcessUnitNative* endProcessor = dataPipe->_outPutNode;
+    if(endProcessor == NULL) return;
     cs_processor_process(dataPipe, endProcessor);
     
 
     PullCallBackPtr callBack = dataPipe->_callback;
     if(callBack != NULL) {
         CSDataWrapNative* dataWrap = cs_data_cache_lock_data_cache(endProcessor);
-        callBack("1",dataWrap);
+        callBack(dataPipe->_bindingSwiftObject,dataWrap);
         cs_data_cache_unlock_data_cache(dataPipe);
     }
 }
@@ -150,6 +154,7 @@ void* cs_data_pipe_create(void) {
     dataPipe = (CSDataPipeNative*)calloc(1, sizeof(CSDataPipeNative));
     if (!dataPipe) return NULL;
     
+    
     //Init
     pthread_mutex_init(&dataPipe->_status_sync_mutex, NULL);
     pthread_cond_init(&dataPipe->_status_sync_cond, NULL);
@@ -175,6 +180,12 @@ void cs_data_pipe_release(void* dataPipePtr) {
     free(dataPipe);
 }
 
+void cs_data_pipe_binding(void* dataPipePtr, const void* wrapperObject) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    dataPipe->_bindingSwiftObject = wrapperObject;
+}
+
 
 void cs_data_pipe_set_main_source(void* dataPipePtr,void* sourcePtr) {
     CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
@@ -198,6 +209,22 @@ void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr) {
     
     dataPipe->_outPutNode = processorPtr;
     cs_header_process_init(dataPipe,source);
+}
+
+
+void cs_data_pipe_vsync(void* dataPipePtr) {
+    CSDataPipeNative *dataPipe = (CSDataPipeNative *)dataPipePtr;
+    if(!dataPipe) return;
+    
+    if (dataPipe->_status & CS_DP_STATUS_VSYNC) return;
+    
+    pthread_mutex_lock(&(dataPipe->_status_sync_mutex));
+    if (!(dataPipe->_status & CS_DP_STATUS_VSYNC)){
+        dataPipe->_status |= CS_DP_STATUS_VSYNC;
+        pthread_cond_signal(&(dataPipe->_status_sync_cond));
+    }
+    pthread_mutex_unlock(&(dataPipe->_status_sync_mutex));
+    
 }
 
 
@@ -375,7 +402,7 @@ void cs_data_processor_connect_dep(void* processorPtr,void *depPtr) {
 }
 
 
-//TODO Read index is actively add 1
+//TODO: Read index is actively add 1
 CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputIndex) {
     CSProcessUnitNative *processor = (CSProcessUnitNative *)processorPtr;
     if(!processor) return NULL;

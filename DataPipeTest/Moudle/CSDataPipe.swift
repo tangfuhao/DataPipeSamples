@@ -17,15 +17,40 @@ class CSDataPipe {
     let nativePtr: UnsafeMutableRawPointer?
     var _pixelBuffer: CVPixelBuffer?
     var _pixelCallBack: PixelCallBack?
+    var displayLink: CADisplayLink?
     
     init() {
 //        print("CSDataPipe init")
         nativePtr = cs_data_pipe_create()
+        createVsyncCaller()
     }
     
     deinit {
 //        print("CSDataPipe release")
+        stopVsyncCaller()
         cs_data_pipe_release(nativePtr)
+    }
+    
+    func setup() {
+        let swiftObjectRef = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        cs_data_pipe_binding(nativePtr, swiftObjectRef)
+    }
+    
+    func createVsyncCaller() {
+        if displayLink != nil {
+            stopVsyncCaller()
+        }
+        displayLink = CADisplayLink(target: self, selector: #selector(handleDisplayLink))
+        displayLink?.add(to: .main, forMode: .default)
+    }
+    
+    func stopVsyncCaller() {
+        displayLink?.invalidate()
+        displayLink = nil
+    }
+    
+    @objc func handleDisplayLink() {
+        cs_data_pipe_vsync(nativePtr)
     }
     
     func setMainInputAndOutput(input: CSSourceNodeImplement, output: CSSourceNodeImplement) {
@@ -101,10 +126,7 @@ extension CSDataPipe {
     public static func createDataPipe() -> CSDataPipe {
         return CSDataPipe()
     }
-    
-    static func getDataPipeFromId(id: String) -> CSDataPipe? {
-        return nil
-    }
+
     
     func Pause() {
         
@@ -130,22 +152,20 @@ extension CSDataPipe {
             return
         }
         
-        cs_data_pipe_register_receiver(nativePtr) { idNative, dataWrapperNative in
-            guard let idNative = idNative,
+        cs_data_pipe_register_receiver(nativePtr) { wrapperObject, dataWrapperNative in
+            guard let wrapperObject = wrapperObject,
                   let dataWrapperNative = dataWrapperNative else {
                 return
             }
             
-            let id = String(cString: idNative)
-            guard let dataPipe = CSDataPipe.getDataPipeFromId(id: id) else {
-                return
-            }
+            let dataPipeWeakRef = Unmanaged<CSDataPipe>.fromOpaque(wrapperObject).takeUnretainedValue()
+   
             
             guard let dataInC = dataWrapperNative.pointee.data else {
                 return
             }
 
-            dataPipe.handleReceiverCVPixelBuffer(dataPointer: dataInC)
+            dataPipeWeakRef.handleReceiverCVPixelBuffer(dataPointer: dataInC)
         }
     }
     

@@ -20,7 +20,7 @@ typedef struct
 } CSDataWrapNative;
 
 //Define data callback function
-typedef void (*PullCallBackPtr)(const char* id, CSDataWrapNative*);
+typedef void (*PullCallBackPtr)(const void* swiftObjPtr, CSDataWrapNative*);
 
 typedef void (*PUInitCallBackPtr)(const void* swiftObjPtr);
 typedef void (*PUReleaseCallBackPtr)(const void* swiftObjPtr);
@@ -115,6 +115,7 @@ typedef struct
     
     
     CSProcessUnitNative*  _outPutNode;
+    const void*           _bindingSwiftObject;
     
 } CSDataPipeNative;
 
@@ -158,7 +159,7 @@ typedef struct
 //init
 void* cs_data_pipe_create(void);
 void cs_data_pipe_release(void* dataPipePtr);
-
+void cs_data_pipe_binding(void* dataPipePtr, const void* wrapperObject);
 
 //contorl
 void cs_data_pipe_pause(void* dataPipePtr);
@@ -167,6 +168,8 @@ void cs_data_pipe_resume(void* dataPipePtr);
 
 void cs_data_pipe_set_main_source(void* dataPipePtr,void* sourcePtr);
 void cs_data_pipe_set_output_node(void* dataPipePtr,void* processorPtr);
+
+void cs_data_pipe_vsync(void* dataPipePtr);
 
 
 // Receiver data from data pipe

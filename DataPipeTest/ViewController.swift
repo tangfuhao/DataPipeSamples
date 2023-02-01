@@ -22,14 +22,17 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        displayLink = CADisplayLink(target: self, selector: #selector(handleDisplayLink))
-        displayLink?.add(to: .main, forMode: .default)
+//        displayLink = CADisplayLink(target: self, selector: #selector(handleDisplayLink))
+//        displayLink?.add(to: .main, forMode: .default)
+        
+    
         
         
         
         
         //Create data pipe
         let dataPipe = CSDataPipe()
+        dataPipe.setup()
         self.dataPipe = dataPipe
 
         let dataSource = CameraSource()
@@ -48,8 +51,10 @@ class ViewController: UIViewController {
     @objc func handleDisplayLink() {
         progress += 1
         
-        if(progress == 1000){
+        if(progress == 100){
             dataPipe = nil
+            displayLink?.invalidate()
+            displayLink = nil
         }
 //        if progress % 60 == 40 {
 //            progress = 0

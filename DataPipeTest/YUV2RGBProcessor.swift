@@ -21,11 +21,21 @@ class YUV2RGBProcessor : CSProcessorPProtocol {
     }
     
     func onProcess() {
-        guard let pixelBuffer = getInputPixel(index: 0),
-              let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
+        /**
+            Steps to process data
+         */
+        
+        //Step #1 Get input data
+        guard let pixelBuffer = getInputPixel(index: 0) else {
             return
         }
         
+        //Step #2 Transform data based on the input data
+        guard let rgbPixelBuffer = getRGBPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
+            return
+        }
+        
+        //Step #3 Store the processed data as the next input data
         storePixelData(pixelBuffer: rgbPixelBuffer)
     }
     
