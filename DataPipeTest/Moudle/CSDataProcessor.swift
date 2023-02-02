@@ -57,7 +57,9 @@ public class CSProcessorNodeImplement : CSSourceNodeImplement {
         return pixelBuffer
     }
     
-    func connectInput(input: CSSourceNodeImplement) {
+    
+    //TODO: index is useless
+    func addInputNode(index: Int, input: CSSourceNodeImplement) {
         cs_data_processor_connect_dep(nativePtr,input.nativePtr)
     }
 }

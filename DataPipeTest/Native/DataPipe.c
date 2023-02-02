@@ -617,7 +617,7 @@ void cs_data_cache_unlock_data_cache(void *sourcePtr) {
     CSDataCacheNative* cache = (CSDataCacheNative*)sourcePtr;
     if(!cache) return ;
     
-    printf("%p 写:%d \n",sourcePtr,cache->_writeIndex);
+//    printf("%p 写:%d \n",sourcePtr,cache->_writeIndex);
     
     CSDataHeaderNative* sasdasd = (CSDataHeaderNative*)sourcePtr;
     
@@ -634,7 +634,7 @@ CSDataWrapNative* cs_data_cache_read_data_cache(void *sourcePtr) {
     
     
     
-    printf("%p 欲读:%d \n",sourcePtr,dataCache->_readIndex);
+//    printf("%p 欲读:%d \n",sourcePtr,dataCache->_readIndex);
     
     if(dataCache->_readIndex == dataCache->_writeIndex){
         if(dataCache->_writeIndex == 0){
@@ -645,6 +645,6 @@ CSDataWrapNative* cs_data_cache_read_data_cache(void *sourcePtr) {
     }
     //mark readed
     dataCache->_readed = 1;
-    printf("%p 实际读:%d \n",sourcePtr,dataCache->_readIndex);
+//    printf("%p 实际读:%d \n",sourcePtr,dataCache->_readIndex);
     return dataCache->_cacheBuffer[dataCache->_readIndex];
 }

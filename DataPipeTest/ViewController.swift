@@ -38,7 +38,7 @@ class ViewController: UIViewController {
         let dataSource = CameraSource()
         let dataProcesser = YUV2RGBProcessor()
         
-        dataProcesser.connectInput(input: dataSource)
+        dataProcesser.addInputNode(index: 0, input: dataSource)
         
         dataPipe.setMainInputAndOutput(input: dataSource, output: dataProcesser)
 
