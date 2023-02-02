@@ -13,21 +13,59 @@ import AVFoundation
 public typealias PixelCallBack = (_ : CVPixelBuffer) -> Void
 
 
+protocol VsyncCallerProtocol : AnyObject {
+    func callDisplayLink()
+}
+
+class VsyncCaller {
+    weak var delegate: VsyncCallerProtocol?
+    var displayLink: CADisplayLink?
+    
+    init(delegate: VsyncCallerProtocol?) {
+        self.delegate = delegate
+        
+        displayLink = CADisplayLink(target: self, selector: #selector(handleDisplayLink))
+        displayLink?.add(to: .main, forMode: .default)
+    }
+    
+    deinit {
+        stopVsyncCaller()
+    }
+    
+    @objc func handleDisplayLink() {
+        guard let delegate = delegate else {
+            return
+        }
+        
+        delegate.callDisplayLink()
+    }
+    
+    
+    func stopVsyncCaller() {
+        displayLink?.invalidate()
+        displayLink = nil
+    }
+}
+
+
+
 class CSDataPipe {
+
+    
     let nativePtr: UnsafeMutableRawPointer?
     var _pixelBuffer: CVPixelBuffer?
     var _pixelCallBack: PixelCallBack?
-    var displayLink: CADisplayLink?
+    var vsyncCaller: VsyncCaller?
     
     init() {
 //        print("CSDataPipe init")
         nativePtr = cs_data_pipe_create()
-        createVsyncCaller()
+        vsyncCaller = VsyncCaller(delegate: self)
     }
     
     deinit {
 //        print("CSDataPipe release")
-        stopVsyncCaller()
+        vsyncCaller = nil
         cs_data_pipe_release(nativePtr)
     }
     
@@ -35,23 +73,7 @@ class CSDataPipe {
         let swiftObjectRef = UnsafeRawPointer(Unmanaged.passUnretained(self).toOpaque())
         cs_data_pipe_binding(nativePtr, swiftObjectRef)
     }
-    
-    func createVsyncCaller() {
-        if displayLink != nil {
-            stopVsyncCaller()
-        }
-        displayLink = CADisplayLink(target: self, selector: #selector(handleDisplayLink))
-        displayLink?.add(to: .main, forMode: .default)
-    }
-    
-    func stopVsyncCaller() {
-        displayLink?.invalidate()
-        displayLink = nil
-    }
-    
-    @objc func handleDisplayLink() {
-        cs_data_pipe_vsync(nativePtr)
-    }
+
     
     func setMainInputAndOutput(input: CSSourceNodeImplement, output: CSSourceNodeImplement) {
         cs_data_pipe_set_main_source(nativePtr, input.nativePtr)
@@ -104,8 +126,13 @@ class CSDataPipe {
         
         CSDataUtils.copyBinary2PixelBuffer(binaryPointer: dataPointer, pixelBuffer: pixelBuffer, dataSizePerRow: bytesPerRow)
     
+        
+        weak var dataPipe = self
         DispatchQueue.main.async  {
-            self.callPixelCallBack()
+            guard let dataPipe = dataPipe else {
+                return
+            }
+            dataPipe.callPixelCallBack()
         }
     }
     
@@ -115,6 +142,12 @@ class CSDataPipe {
     
     
     
+}
+
+extension CSDataPipe : VsyncCallerProtocol {
+    func callDisplayLink() {
+        cs_data_pipe_vsync(nativePtr)
+    }
 }
 
 
