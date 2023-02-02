@@ -18,11 +18,17 @@ class CSDataUtils {
 
         // Create the pointer to the destination memory
         
-        for row in 0..<height {
-            let src = baseAddress!.advanced(by: row * bytesPerRow)
-            let dest = binaryPointer.advanced(by: row * dataSizePerRow)
-            memcpy(dest, src, dataSizePerRow)
+        if(bytesPerRow == dataSizePerRow){
+            memcpy(binaryPointer, baseAddress, height * dataSizePerRow)
+        }else{
+            for row in 0..<height {
+                let src = baseAddress!.advanced(by: row * bytesPerRow)
+                let dest = binaryPointer.advanced(by: row * dataSizePerRow)
+                memcpy(dest, src, dataSizePerRow)
+            }
         }
+        
+        
         
         CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
     }
@@ -32,14 +38,19 @@ class CSDataUtils {
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
-
-
-        // Copy the data to the pixel buffer
-        for row in 0..<height {
-            let dest = baseAddress!.advanced(by: row * bytesPerRow)
-            let src = binaryPointer.advanced(by: row * dataSizePerRow)
-            memcpy(dest, src, dataSizePerRow)
+        
+        if(bytesPerRow == dataSizePerRow){
+            memcpy(baseAddress, binaryPointer, height * dataSizePerRow)
+        }else{
+            // Copy the data to the pixel buffer
+            for row in 0..<height {
+                let dest = baseAddress!.advanced(by: row * bytesPerRow)
+                let src = binaryPointer.advanced(by: row * dataSizePerRow)
+                memcpy(dest, src, dataSizePerRow)
+            }
         }
+        
+        
         CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
     }
 }
