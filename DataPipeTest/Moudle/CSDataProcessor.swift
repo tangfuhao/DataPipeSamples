@@ -42,17 +42,25 @@ public class CSProcessorNodeImplement : CSSourceNodeImplement {
     
     
     func getInputPixel(index: Int) -> CVPixelBuffer? {
-        let width = 640
-        let height = 480
-        let bytesPerRow = width * 4
+        
+//        cs_data_processor_get_input_node(nativePtr, index)
 
-        guard let dataCachePointer = cs_data_processor_get_input_data(nativePtr, Int32(index)) else {
+        
+        guard let inputNode = cs_data_processor_get_input_node(nativePtr, Int32(index)),
+              let dataCachePointer = cs_data_cache_read_data_cache(inputNode) else {
             return nil
         }
-
+        
+        let category = cs_data_cache_get_data_category(inputNode)
+        let width = cs_data_cache_get_width(inputNode)
+        let bytesPerRow = cs_data_cache_get_bytes_per_row(inputNode)
+        
+        let dataSize = dataCachePointer.pointee.dataSize
         let pixelData = dataCachePointer.pointee.data!
+        let height = dataSize/bytesPerRow
+        
         var pixelBuffer: CVPixelBuffer?
-        CVPixelBufferCreateWithBytes(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, pixelData, bytesPerRow, nil, nil, nil, &pixelBuffer)
+        CVPixelBufferCreateWithBytes(kCFAllocatorDefault, Int(width), Int(height), kCVPixelFormatType_32BGRA, pixelData, Int(bytesPerRow), nil, nil, nil, &pixelBuffer)
 
         return pixelBuffer
     }

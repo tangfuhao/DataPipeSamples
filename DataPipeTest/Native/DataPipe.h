@@ -282,7 +282,8 @@ void cs_data_processor_release(void* processorPtr);
 void cs_data_processor_connect_dep(void* processorPtr,void* depPtr);
 
 //Data
-CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputIndex);
+//CSDataWrapNative* cs_data_processor_get_input_data(void* processorPtr,int inputIndex);
+void* cs_data_processor_get_input_node(void* processorPtr,int inputIndex);
 
 void cs_data_processor_register_onProcess_function(void* sourcePtr, PUProcessCallBackPtr callBack);
 /**
