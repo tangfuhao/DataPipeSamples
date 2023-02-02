@@ -566,7 +566,7 @@ void cs_data_cache_create_data_cache(void *sourcePtr, int dataSize, CSDataCatego
 
 int cs_get_bytes_per_row(int width, CSDataCategoryNative category) {
     if (category == NV21){
-        return width + (width >> 1);
+        return width + (width >> 1) + 4;
     }
     
     return width << 2;
