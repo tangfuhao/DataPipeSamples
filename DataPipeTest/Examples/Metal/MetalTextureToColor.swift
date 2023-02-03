@@ -17,7 +17,7 @@ protocol MetalMappingDelegate : AnyObject{
 
 
 // 命令缓冲区同时处理的最大数量
-let kMaxBuffersInFlight: Int = 1
+let kMaxBuffersInFlight: Int = 2
 
 
 // 平面的顶点数据（显示相机）
@@ -30,27 +30,34 @@ let kImagePlaneVertexData: [Float] = [
 
 //纹理转颜色
 class MetalTextureToColor {
-    let device: MTLDevice
     let inFlightSemaphore = DispatchSemaphore(value: kMaxBuffersInFlight)
 
     
     // Metal objects
     var commandQueue: MTLCommandQueue!
     var copyTexturePlaneVertexBuffer: MTLBuffer!
-    var copyToTexturePipelineState: MTLRenderPipelineState!
+    var yuv2rgbPipelineState: MTLRenderPipelineState!
     
     // rgba objects
     var rgbaRenderTargetDesc: MTLRenderPassDescriptor!
     var rgbaTextureTextureCache: CVMetalTextureCache!
-    var rgbaMLTTexture: MTLTexture?
     var rgbaPixelBuffer: CVPixelBuffer?
+    
+    // yuv objects
+    var capturedImageTextureCache: CVMetalTextureCache!
+    var capturedImageTextureY: CVMetalTexture?
+    var capturedImageTextureCbCr: CVMetalTexture?
+    
+    
     weak var delegate :MetalMappingDelegate?
     
+    
+    
+    
     init(metalDevice device: MTLDevice,contentSize: CGSize) {
-        self.device = device
-        loadCacheTexture(width: Int(contentSize.width),height: Int(contentSize.height))
-        loadMetal()
         print("MetalTextureToColor 创建")
+        loadCacheTexture(device: device, width: Int(contentSize.width),height: Int(contentSize.height))
+        loadMetal(device: device)
     }
     
     //TODO Metal 资源释放
@@ -59,15 +66,58 @@ class MetalTextureToColor {
     }
     
 
+    
+    
+
+    
+    func updateCapturedImageTextures(pixelBuffer: CVPixelBuffer) {
+        
+        if (CVPixelBufferGetPlaneCount(pixelBuffer) < 2) {
+            return
+        }
+        
+        capturedImageTextureY = createTexture(fromPixelBuffer: pixelBuffer, textureCache: capturedImageTextureCache, pixelFormat:.r8Unorm, planeIndex:0)
+        capturedImageTextureCbCr = createTexture(fromPixelBuffer: pixelBuffer, textureCache: capturedImageTextureCache, pixelFormat:.rg8Unorm, planeIndex:1)
+    }
+    
+    func updateGameState(currentFrame: CVPixelBuffer) {
+        updateCapturedImageTextures(pixelBuffer: currentFrame)
+    }
+    
+    
+    func drawCapturedImage(renderEncoder: MTLRenderCommandEncoder) {
+        guard let textureY = capturedImageTextureY, let textureCbCr = capturedImageTextureCbCr else {
+            return
+        }
+        
+        // Push a debug group allowing us to identify render commands in the GPU Frame Capture tool
+        renderEncoder.pushDebugGroup("DrawCapturedImage")
+        
+        // Set render command encoder state
+        renderEncoder.setCullMode(.none)
+        renderEncoder.setRenderPipelineState(yuv2rgbPipelineState)
+        
+        // 设置 Mesh 的顶点缓冲区
+        renderEncoder.setVertexBuffer(copyTexturePlaneVertexBuffer, offset: 0, index: Int(kBufferIndexMeshPositions.rawValue))
+        
+        // 设置渲染管道中采样的纹理
+        
+        // Set any textures read/sampled from our render pipeline
+        renderEncoder.setFragmentTexture(CVMetalTextureGetTexture(textureY), index: Int(kTextureIndexY.rawValue))
+        renderEncoder.setFragmentTexture(CVMetalTextureGetTexture(textureCbCr), index: Int(kTextureIndexCbCr.rawValue))
+        
+        // Draw each submesh of our mesh
+        renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        
+        renderEncoder.popDebugGroup()
+    }
 
     
     //每帧更新数据并渲染
-    func update(source: MTLTexture) {
+    func update(source: CVPixelBuffer) {
         
-        // 等待当前命令(App, Metal, Drivers, GPU, etc)缓冲区有剩余空间
         let _ = inFlightSemaphore.wait(timeout: DispatchTime.distantFuture)
         
-        // 为每个渲染通道创建一个新的命令缓冲区，用于当前可绘制的图像。
         if let commandBuffer = commandQueue.makeCommandBuffer() {
             commandBuffer.label = "MyCommand"
             
@@ -90,25 +140,17 @@ class MetalTextureToColor {
                 }
             }
             
-
+            updateGameState(currentFrame: source)
             
-            //获取渲染目标的MTLRenderPassDescriptor，CAMetalDrawable，MTLRenderCommandEncoder并执行渲染命令
-            //渲染到缓存纹理
             if  let renderPassDescriptor = rgbaRenderTargetDesc,
                 let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) {
                 
                 renderEncoder.label = "MyRenderEncoder"
                 
-                
-                //rgba中间状态纹理拷贝
-                drawTextureCopy(sourceTexture: source, renderEncoder: renderEncoder)
+                drawCapturedImage(renderEncoder: renderEncoder)
                 // 完成绘制
                 renderEncoder.endEncoding()
             }
-            
-            
-            
-            // 完成渲染，并将命令缓冲区推送给GPU
             commandBuffer.commit()
         }
     }
@@ -116,37 +158,29 @@ class MetalTextureToColor {
 }
 
 extension MetalTextureToColor {
-    // 创建并初始化 Metal，初始化渲染数据缓冲区
-    func loadMetal() {
-        // 设置渲染目标（MTKView）所需的默认格式
-        let defaultDepthStencilPixelFormat = MTLPixelFormat.depth32Float_stencil8
-        let defaultColorPixelFormat = MTLPixelFormat.bgra8Unorm
-        let defaultSampleCount = 1
+
+    func loadMetal(device: MTLDevice) {
         
-        
-        
-        // 用平面顶点数组创建一个顶点缓冲区。
+        //Create VertexBuffer for plane
         let imagePlaneVertexDataCount = kImagePlaneVertexData.count * MemoryLayout<Float>.size
         copyTexturePlaneVertexBuffer = device.makeBuffer(bytes: kImagePlaneVertexData, length: imagePlaneVertexDataCount, options: [])
         copyTexturePlaneVertexBuffer.label = "copyTexturePlaneVertexBuffer"
         
-        // 加载项目下的 Shader
+        // Load Shader
         let frameworkBundle = Bundle(for: type(of: self))
         let metalLibraryPath = frameworkBundle.path(forResource: "default", ofType: "metallib")!
         
         guard let defaultLibrary = try? device.makeLibrary(filepath:metalLibraryPath) else {
             fatalError("加载Shader 失败")
         }
-        
-//        guard let defaultLibrary = device.makeDefaultLibrary() else {
-//            fatalError("加载Shader 失败")
-//        }
-
+    
 
         let capturedImageVertexFunction = defaultLibrary.makeFunction(name: "capturedImageVertexTransform")!
-        let textureCopyFragmentFunction = defaultLibrary.makeFunction(name: "textureCopyFragmentShader")!
+        let textureCopyFragmentFunction = defaultLibrary.makeFunction(name: "capturedImageFragmentShader")!
 
-        // 为平面顶点缓冲器创建一个顶点描述符
+        
+        
+        //Create VertexDescriptor
         let imagePlaneVertexDescriptor = MTLVertexDescriptor()
 
         // Positions.
@@ -169,21 +203,18 @@ extension MetalTextureToColor {
         
         
         //创建一个纹理拷贝的渲染管线
-        let copyToTexturePipelineStateDescriptor = MTLRenderPipelineDescriptor()
-        copyToTexturePipelineStateDescriptor.label = "CopyToTexturePipeline"
-        copyToTexturePipelineStateDescriptor.sampleCount = defaultSampleCount
-        copyToTexturePipelineStateDescriptor.vertexFunction = capturedImageVertexFunction
-        copyToTexturePipelineStateDescriptor.fragmentFunction = textureCopyFragmentFunction
-        copyToTexturePipelineStateDescriptor.vertexDescriptor = imagePlaneVertexDescriptor
-        copyToTexturePipelineStateDescriptor.colorAttachments[0].pixelFormat = defaultColorPixelFormat
-//        copyToTexturePipelineStateDescriptor.depthAttachmentPixelFormat = defaultDepthStencilPixelFormat
-//        copyToTexturePipelineStateDescriptor.stencilAttachmentPixelFormat = defaultDepthStencilPixelFormat
+        let yuv2rgbPipelineStateDescriptor = MTLRenderPipelineDescriptor()
+        yuv2rgbPipelineStateDescriptor.label = "CopyToTexturePipeline"
+        yuv2rgbPipelineStateDescriptor.vertexFunction = capturedImageVertexFunction
+        yuv2rgbPipelineStateDescriptor.fragmentFunction = textureCopyFragmentFunction
+        yuv2rgbPipelineStateDescriptor.vertexDescriptor = imagePlaneVertexDescriptor
+        yuv2rgbPipelineStateDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormat.bgra8Unorm
         
         
         do {
-            try copyToTexturePipelineState = device.makeRenderPipelineState(descriptor: copyToTexturePipelineStateDescriptor)
+            yuv2rgbPipelineState = try device.makeRenderPipelineState(descriptor: yuv2rgbPipelineStateDescriptor)
         } catch let error {
-            print("Failed to created captured image pipeline state, error \(error)")
+            fatalError("Failed to created captured image pipeline state, error \(error)")
         }
 
         // 创建命令队列
@@ -191,84 +222,62 @@ extension MetalTextureToColor {
     }
     
     
-    //TODO 优化 不使用缓存
-    func loadCacheTexture(width: Int, height: Int) {
+    func loadCacheTexture(device: MTLDevice, width: Int, height: Int) {
+        //Create YUV CVMetalTextureCache
+        var textureCache: CVMetalTextureCache?
+        CVMetalTextureCacheCreate(nil, nil, device, nil, &textureCache)
+        capturedImageTextureCache = textureCache
+        
+        
+        //Create RGBA PixelBuffer
+        var pixelBuffer :CVPixelBuffer! = nil
+        let options = [ kCVPixelBufferMetalCompatibilityKey as String: true ] as [String: Any]
+        let status = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, options as CFDictionary, &pixelBuffer)
+        guard status == kCVReturnSuccess else {
+            fatalError("create rgba pixel faild!!" + status.description)
+        }
+        self.rgbaPixelBuffer = pixelBuffer
+        
+        //Create BGRA CVMetalTextureCache
         var rgbaTextureCache: CVMetalTextureCache?
         CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &rgbaTextureCache)
         rgbaTextureTextureCache = rgbaTextureCache
         
-        //创建纹理到纹理的MTLRenderPassDescriptor
-        let cpTxPassDescriptor = MTLRenderPassDescriptor()
-        if let rgbaColorAttachment = cpTxPassDescriptor.colorAttachments[0] {
+        //Binding BGRA PixelBuffer to CVMetalTextureCache
+        guard let rgbCVMetalTexture = createTexture(fromPixelBuffer: pixelBuffer, textureCache: rgbaTextureTextureCache, pixelFormat: .bgra8Unorm, planeIndex: 0) else {
+            fatalError("Create rgbCVMetalTexture has error")
+        }
+        
+        
+    
+        //Create RenderPass and setting Metal Texture to Color Attachment
+        let texturePassDescriptor = MTLRenderPassDescriptor()
+        if let rgbaColorAttachment = texturePassDescriptor.colorAttachments[0] {
             rgbaColorAttachment.loadAction = .clear
             rgbaColorAttachment.storeAction = .store
             rgbaColorAttachment.clearColor = MTLClearColorMake(0, 0, 0, 1)
-            rgbaRenderTargetDesc = cpTxPassDescriptor
+            rgbaColorAttachment.texture = CVMetalTextureGetTexture(rgbCVMetalTexture)
         }
-        
-        
-        //创建输出的RGBA PixelBuffer
-        var pixelBuffer :CVPixelBuffer! = nil
-        let options = [
-                    kCVPixelBufferMetalCompatibilityKey as String: true,
-//                    kCVPixelBufferCGBitmapContextCompatibilityKey as String: true,
-                ] as [String: Any]
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, options as CFDictionary, &pixelBuffer)
-        if status != kCVReturnSuccess {
-//            print("create rgba pixel faild!!" + status.printStateName())
-            return
-        }
-        
-        if  let texture = createTexture(fromPixelBuffer: pixelBuffer, textureCache: rgbaTextureTextureCache, pixelFormat: .bgra8Unorm, planeIndex: 0) {
-            rgbaPixelBuffer = pixelBuffer
-//            print(pixelBuffer.hashValue)
-//            print(rgbaPixelBuffer.hashValue)
-            rgbaMLTTexture = CVMetalTextureGetTexture(texture)
-        }
-        
-        if let colorAttachment = self.rgbaRenderTargetDesc.colorAttachments[0]{
-            colorAttachment.texture = self.rgbaMLTTexture
-        }
+        self.rgbaRenderTargetDesc = texturePassDescriptor
     }
     
-    //创建纹理
+    
+    
+
+    
     func createTexture(fromPixelBuffer pixelBuffer: CVPixelBuffer, textureCache: CVMetalTextureCache, pixelFormat: MTLPixelFormat, planeIndex: Int) -> CVMetalTexture? {
         let width = CVPixelBufferGetWidthOfPlane(pixelBuffer, planeIndex)
         let height = CVPixelBufferGetHeightOfPlane(pixelBuffer, planeIndex)
-        
 
-        
         var texture: CVMetalTexture? = nil
         let status = CVMetalTextureCacheCreateTextureFromImage(nil, textureCache, pixelBuffer, nil, pixelFormat, width, height, planeIndex, &texture)
-        
+
         if status != kCVReturnSuccess {
             texture = nil
-//            print(status.printStateName())
+            print(status.description)
         }
-        
+
         return texture
     }
 
-    //复制纹理
-    func drawTextureCopy(sourceTexture: MTLTexture, renderEncoder: MTLRenderCommandEncoder) {
-
-        // 推送一个DebugGroup，允许我们在GPU帧捕获工具中识别渲染命令
-        renderEncoder.pushDebugGroup("DrawCopyTexture")
-        
-        // 设置渲染命令编码器的状态
-        renderEncoder.setCullMode(.none)
-        renderEncoder.setRenderPipelineState(copyToTexturePipelineState)
-        
-        // 设置 Mesh 的顶点缓冲区
-        renderEncoder.setVertexBuffer(copyTexturePlaneVertexBuffer, offset: 0, index: Int(kBufferIndexMeshPositions.rawValue))
-        
-        // 设置渲染管道中采样的纹理
-        renderEncoder.setFragmentTexture(sourceTexture, index: Int(kTextureIndexColor.rawValue))
-        
-        // 绘制网格
-        renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        
-        //推出DebugGroup
-        renderEncoder.popDebugGroup()
-    }
 }

@@ -169,6 +169,15 @@ public class CSSourceNodeImplement {
             }
             
             cs_data_cache_create_data_cache(nativePtr, Int32(binaryParams.size), CSDataCategoryNative(dataType.category.rawValue) )
+        }else if(dataType.category == .NV21){
+            
+            
+            guard let pixelParams = dataType.pixelParams else {
+                fatalError("Function onRegisterOutputDataType return pixelParams is nil")
+            }
+            cs_data_cache_create_video_data_cache(nativePtr, Int32(pixelParams.width), Int32(pixelParams.height), CSDataCategoryNative(dataType.category.rawValue))
+            
+            
         }else{
             guard let pixelParams = dataType.pixelParams else {
                 fatalError("Function onRegisterOutputDataType return pixelParams is nil")
@@ -206,8 +215,7 @@ public class CSSourceNodeImplement {
         
         //Store data to cache
         let dataCachePointer: UnsafeMutablePointer<CSDataWrapNative> = cs_data_cache_lock_data_cache(nativePtr)
-        let destinationPointer: UnsafeMutableRawPointer = dataCachePointer.pointee.data
-        CSDataUtils.copyPixelBuffer2Binary(pixelBuffer: pixelBuffer, binaryPointer: destinationPointer, dataSizePerRow: bytesPerRow)
+        CSDataUtils.copyPixelBuffer2Binary(pixelBuffer: pixelBuffer, dataCachePointer: dataCachePointer, dataSizePerRow: bytesPerRow)
         cs_data_cache_unlock_data_cache(nativePtr)
         
 

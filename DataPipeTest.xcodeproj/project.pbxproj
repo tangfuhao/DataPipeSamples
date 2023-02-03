@@ -22,9 +22,10 @@
 		7BCF499D29794699002BA8EF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7BCF499B29794699002BA8EF /* LaunchScreen.storyboard */; };
 		7BCF49A8297946BB002BA8EF /* DataPipe.c in Sources */ = {isa = PBXBuildFile; fileRef = 7BCF49A7297946BB002BA8EF /* DataPipe.c */; };
 		7BEA00F9298A088F0028EED6 /* CSDataUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA00F8298A088F0028EED6 /* CSDataUtils.swift */; };
-		7BEA0100298B88860028EED6 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA00FC298B88860028EED6 /* Shaders.metal */; };
-		7BEA0101298B88860028EED6 /* MetalTextureToColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA00FE298B88860028EED6 /* MetalTextureToColor.swift */; };
-		7BEA0102298B88860028EED6 /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA00FF298B88860028EED6 /* MetalRenderer.swift */; };
+		7BEA0134298B93F90028EED6 /* MetalTextureToColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA0130298B93F90028EED6 /* MetalTextureToColor.swift */; };
+		7BEA0135298B93F90028EED6 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA0131298B93F90028EED6 /* Shaders.metal */; };
+		7BEA0136298B93F90028EED6 /* MetalRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA0133298B93F90028EED6 /* MetalRenderer.swift */; };
+		7BEA013A298BAE0C0028EED6 /* DataCache_IOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7BEA0139298BAE0C0028EED6 /* DataCache_IOS.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,10 +49,11 @@
 		7BCF49A6297946BB002BA8EF /* DataPipe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DataPipe.h; sourceTree = "<group>"; };
 		7BCF49A7297946BB002BA8EF /* DataPipe.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DataPipe.c; sourceTree = "<group>"; };
 		7BEA00F8298A088F0028EED6 /* CSDataUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSDataUtils.swift; sourceTree = "<group>"; };
-		7BEA00FC298B88860028EED6 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
-		7BEA00FD298B88860028EED6 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
-		7BEA00FE298B88860028EED6 /* MetalTextureToColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalTextureToColor.swift; sourceTree = "<group>"; };
-		7BEA00FF298B88860028EED6 /* MetalRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
+		7BEA0130298B93F90028EED6 /* MetalTextureToColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalTextureToColor.swift; sourceTree = "<group>"; };
+		7BEA0131298B93F90028EED6 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		7BEA0132298B93F90028EED6 /* ShaderTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
+		7BEA0133298B93F90028EED6 /* MetalRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalRenderer.swift; sourceTree = "<group>"; };
+		7BEA0139298BAE0C0028EED6 /* DataCache_IOS.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DataCache_IOS.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +118,7 @@
 				7B65CE40298769FD0048A751 /* DataPipe_Internal.h */,
 				7BCF49A7297946BB002BA8EF /* DataPipe.c */,
 				7BCF49A5297946BA002BA8EF /* DataPipeTest-Bridging-Header.h */,
+				7BEA0139298BAE0C0028EED6 /* DataCache_IOS.mm */,
 			);
 			path = Native;
 			sourceTree = "<group>";
@@ -135,10 +138,10 @@
 		7BEA00FB298B88720028EED6 /* Metal */ = {
 			isa = PBXGroup;
 			children = (
-				7BEA00FF298B88860028EED6 /* MetalRenderer.swift */,
-				7BEA00FE298B88860028EED6 /* MetalTextureToColor.swift */,
-				7BEA00FC298B88860028EED6 /* Shaders.metal */,
-				7BEA00FD298B88860028EED6 /* ShaderTypes.h */,
+				7BEA0133298B93F90028EED6 /* MetalRenderer.swift */,
+				7BEA0130298B93F90028EED6 /* MetalTextureToColor.swift */,
+				7BEA0131298B93F90028EED6 /* Shaders.metal */,
+				7BEA0132298B93F90028EED6 /* ShaderTypes.h */,
 			);
 			path = Metal;
 			sourceTree = "<group>";
@@ -215,21 +218,22 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7BEA013A298BAE0C0028EED6 /* DataCache_IOS.mm in Sources */,
 				7B65CE3F298622AA0048A751 /* YUV2RGBProcessor.swift in Sources */,
 				7B65CE3229821B720048A751 /* CSDataProcessor.swift in Sources */,
-				7BEA0100298B88860028EED6 /* Shaders.metal in Sources */,
 				7BCF499529794698002BA8EF /* ViewController.swift in Sources */,
 				7BCF499129794698002BA8EF /* AppDelegate.swift in Sources */,
 				7BCF499329794698002BA8EF /* SceneDelegate.swift in Sources */,
 				7BEA00F9298A088F0028EED6 /* CSDataUtils.swift in Sources */,
 				7B65CE3B2984CF7C0048A751 /* CameraCapture.swift in Sources */,
 				7B65CE3D29860CDE0048A751 /* CustomProcessor.swift in Sources */,
+				7BEA0135298B93F90028EED6 /* Shaders.metal in Sources */,
 				7B65CE34298224540048A751 /* CSDataPipe.swift in Sources */,
-				7BEA0101298B88860028EED6 /* MetalTextureToColor.swift in Sources */,
 				7B65CE3029821B5B0048A751 /* CSDataSource.swift in Sources */,
 				7BCF49A8297946BB002BA8EF /* DataPipe.c in Sources */,
+				7BEA0134298B93F90028EED6 /* MetalTextureToColor.swift in Sources */,
 				7B65CE3929827A4E0048A751 /* CameraSource.swift in Sources */,
-				7BEA0102298B88860028EED6 /* MetalRenderer.swift in Sources */,
+				7BEA0136298B93F90028EED6 /* MetalRenderer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

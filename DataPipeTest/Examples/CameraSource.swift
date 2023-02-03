@@ -31,7 +31,18 @@ class CameraSource : CSSourcePProtocol {
 
 extension CameraSource: CameraCapturePushDelegate {
     func myVideoCapture(_ capture: CameraCapture, didOutputSampleBuffer pixelBuffer: CVPixelBuffer, rotation: Int, timeStamp: CMTime) {
-//        print("w:\(CVPixelBufferGetWidth(pixelBuffer)) ,h: \(CVPixelBufferGetHeight(pixelBuffer)) ")
+//        if CVPixelBufferIsPlanar(pixelBuffer) {
+//            let planeCount = CVPixelBufferGetPlaneCount(pixelBuffer)
+//            for index in 0...planeCount {
+//                print("index:\(index), WidthOfPlane: \(CVPixelBufferGetWidthOfPlane(pixelBuffer, index)), bytesPerRowOfPlane: \(CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, index)) )")
+//            }
+//            
+//            
+//        }
+
+
+        let swiftObjectRef = UnsafeRawPointer(Unmanaged.passUnretained(pixelBuffer).toOpaque())
+        
         storePixelData(pixelBuffer: pixelBuffer)
     }
 }

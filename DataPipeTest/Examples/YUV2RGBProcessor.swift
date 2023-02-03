@@ -10,10 +10,20 @@ import CoreVideo
 
 class YUV2RGBProcessor : CSProcessorPProtocol {
     var rgbPixelBufferTemp: CVPixelBuffer?
+    var converter: MetalTextureToColor?
     
     override init() {
         super.init()
         print("YUV2RGBProcessor init")
+        
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            fatalError("Can not get device ");
+        }
+        
+        let converter = MetalTextureToColor(metalDevice: device, contentSize: CGSize(width: 640, height: 480))
+        self.converter = converter
+        converter.delegate = self
+        
     }
     
     deinit {
@@ -31,12 +41,10 @@ class YUV2RGBProcessor : CSProcessorPProtocol {
         }
         
         //Step #2 Transform data based on the input data
-        guard let rgbPixelBuffer = converYUVToBGRAPixelBuffer(yuvPixelBuffer: pixelBuffer) else {
+        guard let converter = converter else {
             return
         }
-        
-        //Step #3 Store the processed data as the next input data
-        storePixelData(pixelBuffer: rgbPixelBuffer)
+        converter.update(source: pixelBuffer)
     }
     
     func onInit() {
@@ -54,26 +62,13 @@ class YUV2RGBProcessor : CSProcessorPProtocol {
     func onRegisterOutputDataType() -> CSDataType {
         return CSDataType(pixelParams: CSPixelParams(width: 640, height: 480, dataCategory: .BGRA32))
     }
-    
-    
-    func converYUVToBGRAPixelBuffer(yuvPixelBuffer: CVPixelBuffer) -> CVPixelBuffer? {
-        if (rgbPixelBufferTemp ==  nil){
-            let width = CVPixelBufferGetWidth(yuvPixelBuffer)
-            let height = CVPixelBufferGetHeight(yuvPixelBuffer)
-            var pixelBuffer: CVPixelBuffer?
-            let status = CVPixelBufferCreate(nil, width, height, kCVPixelFormatType_32BGRA, nil, &pixelBuffer)
-
-            if status != kCVReturnSuccess {
-                print("Error creating pixel buffer")
-                return nil
-            }
-            rgbPixelBufferTemp = pixelBuffer
-            return pixelBuffer
-        }
-        
-        return rgbPixelBufferTemp
-
-
-    }
 }
 
+
+extension YUV2RGBProcessor : MetalMappingDelegate {
+    func onColorData(pixelBuffer: CVPixelBuffer) {
+        //Step #3 Store the processed data as the next input data
+        storePixelData(pixelBuffer: pixelBuffer)
+    }
+
+}

@@ -10,6 +10,11 @@ import Metal
 import MetalKit
 
 
+//protocol RendererDelegate : AnyObject {
+//    //渲染结果
+//    func onRenderResult(pixelResult :CVPixelBuffer)
+//}
+
 // 平面的顶点数据（显示相机） 
 let kImagePlaneVertexData2: [Float] = [
     -1.0, -1.0, 0.0, 0.0,
